@@ -1,17 +1,79 @@
-import React, { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Helmet } from 'react-helmet';
-import RegistrationHeader from './components/RegistrationHeader';
+import { useNavigate } from 'react-router-dom';
 import RegistrationForm from './components/RegistrationForm';
+import RegistrationHeader from './components/RegistrationHeader';
 import TrustSignals from './components/TrustSignals';
+// import LoadingSpinner from '../../../components/ui/LoadingSpinner';
+import LoadingSpinner from '../../components/ui/LoadingSpinner';
+
 
 const UserRegistration = () => {
   const [currentLanguage, setCurrentLanguage] = useState('en');
+  const [registrationStatus, setRegistrationStatus] = useState({
+    loading: false,
+    success: false,
+    error: null
+  });
+  const navigate = useNavigate();
 
   useEffect(() => {
     // Check localStorage for saved language preference
     const savedLanguage = localStorage.getItem('mukando_language') || 'en';
     setCurrentLanguage(savedLanguage);
   }, []);
+
+  const handleRegistrationSuccess = () => {
+    setRegistrationStatus({ loading: false, success: true, error: null });
+    
+    // Redirect to login after a short delay
+    setTimeout(() => {
+      navigate('/user-login', { 
+        state: { 
+          message: 'Registration successful! Please check your email to verify your account.',
+          registrationSuccess: true
+        } 
+      });
+    }, 2000);
+  };
+
+  const handleRegistrationError = (error) => {
+    setRegistrationStatus({ loading: false, success: false, error });
+  };
+
+  const handleRegistrationStart = () => {
+    setRegistrationStatus({ loading: true, success: false, error: null });
+  };
+
+  if (registrationStatus.loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="text-center">
+          <LoadingSpinner size="lg" />
+          <h2 className="mt-4 text-xl font-semibold text-foreground">Creating your account...</h2>
+          <p className="text-muted-foreground">This will just take a moment</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (registrationStatus.success) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="text-center max-w-md p-6 bg-card rounded-lg border border-border shadow-warm">
+          <div className="w-16 h-16 bg-success/10 rounded-full flex items-center justify-center mx-auto mb-4">
+            <svg className="w-8 h-8 text-success" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+            </svg>
+          </div>
+          <h2 className="text-2xl font-semibold text-foreground mb-2">Registration Successful!</h2>
+          <p className="text-muted-foreground mb-6">
+            Your account has been created successfully. Redirecting you to login...
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <>
@@ -27,6 +89,7 @@ const UserRegistration = () => {
         <meta property="og:type" content="website" />
         <link rel="canonical" href="/user-registration" />
       </Helmet>
+      
       <div className="min-h-screen bg-background">
         {/* Main Content */}
         <div className="container mx-auto px-4 py-8">
@@ -42,7 +105,11 @@ const UserRegistration = () => {
 
                   {/* Registration Form */}
                   <div className="space-y-6">
-                    <RegistrationForm />
+                    <RegistrationForm 
+                      onRegistrationStart={handleRegistrationStart}
+                      onRegistrationSuccess={handleRegistrationSuccess}
+                      onRegistrationError={handleRegistrationError}
+                    />
                   </div>
                 </div>
               </div>
@@ -77,7 +144,7 @@ const UserRegistration = () => {
               </div>
               <div className="text-sm text-muted-foreground">
                 <p>
-                  © {new Date()?.getFullYear()} Mukando. All rights reserved. 
+                  © {new Date().getFullYear()} Mukando. All rights reserved. 
                   Empowering African communities through digital savings.
                 </p>
               </div>

@@ -14,6 +14,7 @@ export const useAuth = () => {
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null)
   const [profile, setProfile] = useState(null)
+  const [permissions, setPermissions] = useState([])
   const [isLoading, setIsLoading] = useState(true)
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [error, setError] = useState(null)
@@ -71,37 +72,56 @@ export const AuthProvider = ({ children }) => {
   // Register new user
   const register = async (userData) => {
     setIsLoading(true)
+    setError(null)
+
     try {
-      const { data, error } = await supabase?.auth?.signUp({
-        email: userData?.email,
-        password: userData?.password,
+      // validate input data
+      if (!userData.email || !userData.password){
+        throw new Error('Email and password are required')
+      }
+
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email: userData.email,
+        password: userData.password,
         options: {
           data: {
-            full_name: userData?.fullName,
-            phone_number: userData?.phoneNumber,
-            country: userData?.country,
-            mobile_money_provider: userData?.mobileMoneyProvider,
-            subscribe_newsletter: userData?.subscribeNewsletter,
+            full_name: userData.fullName,
+            phone_number: userData.phoneNumber,
+            country: userData.country,
+            mobile_money_provider: userData.mobileMoneyProvider,
+            subscribe_newsletter: userData.subscribeNewsletter,
             role: 'member'
-          }
-        }
-      })
+          },
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
+        },
+      });
 
-      if (error) throw error
+      if (authError){
+        throw new Error(authError.message)
+      }
 
       // Return success - user profile will be created automatically via trigger
       return { 
-        success: true, 
-        user: data?.user,
-        message: 'Registration successful! Please check your email to verify your account.'
+        success: true,
+        message: 'Registration successful! Please check your email to verify your account.',
+        user: authData?.user
       };
     } catch (error) {
       console.error('Registration error:', error)
-      throw new Error(error.message || 'Registration failed')
+
+      // handle specific error cases
+      let errorMessage = error.message || 'Registration failed. Please try again.';
+      if (error.message.includes('already registered')) {
+        errorMessage = 'This email is already registered. Please log in or use a different email.';
+      }else if (error.message.includes('password')){
+        errorMessage= 'Please enter a valid password.';
+      }
+      setError(errorMessage)
+      return{success: false, error: errorMessage};
     } finally {
       setIsLoading(false)
     }
-  }
+  };
 
   // Login user
   const login = async (credentials) => {
@@ -122,6 +142,25 @@ export const AuthProvider = ({ children }) => {
       setIsLoading(false)
     }
   }
+
+  // Social login
+  const socialLogin = async (provider) => {
+    setIsLoading(true);
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider,
+        options: {
+          redirectTo: `${window.location.origin}/member-dashboard`,
+        },
+      });
+      if (error) throw error;
+    } catch (error) {
+      console.error('Social login error:', error);
+      throw new Error(error.message || 'Social login failed');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   // Logout user
   const logout = async () => {
@@ -243,6 +282,7 @@ export const AuthProvider = ({ children }) => {
     // Actions
     register,
     login,
+    socialLogin,
     logout,
     updateProfile,
     changePassword,

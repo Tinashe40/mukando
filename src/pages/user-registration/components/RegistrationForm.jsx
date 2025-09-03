@@ -1,13 +1,13 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../../../contexts/AuthContext';
 import Icon from '../../../components/AppIcon';
 import Button from '../../../components/ui/Button';
+import { Checkbox } from '../../../components/ui/Checkbox';
 import Input from '../../../components/ui/Input';
 import Select from '../../../components/ui/Select';
-import { Checkbox } from '../../../components/ui/Checkbox';
+import { useAuth } from '../../../contexts/AuthContext';
 
-const RegistrationForm = () => {
+const RegistrationForm = ({ onRegistrationStart, onRegistrationSuccess, onRegistrationError }) => {
   const navigate = useNavigate();
   const { register } = useAuth();
   
@@ -22,6 +22,7 @@ const RegistrationForm = () => {
     agreeToTerms: false,
     subscribeNewsletter: false
   });
+  
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
   const [passwordStrength, setPasswordStrength] = useState(0);
@@ -58,11 +59,12 @@ const RegistrationForm = () => {
 
   const calculatePasswordStrength = (password) => {
     let strength = 0;
-    if (password?.length >= 8) strength += 25;
-    if (/[a-z]/?.test(password)) strength += 25;
-    if (/[A-Z]/?.test(password)) strength += 25;
-    if (/[0-9]/?.test(password)) strength += 25;
-    return strength;
+    if (password.length >= 8) strength += 25;
+    if (/[a-z]/.test(password)) strength += 25;
+    if (/[A-Z]/.test(password)) strength += 25;
+    if (/[0-9]/.test(password)) strength += 25;
+    if (/[^A-Za-z0-9]/.test(password)) strength += 25;
+    return Math.min(strength, 100);
   };
 
   const handleInputChange = (field, value) => {
@@ -77,7 +79,7 @@ const RegistrationForm = () => {
     }
     
     // Clear errors when user starts typing
-    if (errors?.[field]) {
+    if (errors[field]) {
       setErrors(prev => ({ ...prev, [field]: '' }));
     }
   };
@@ -85,69 +87,76 @@ const RegistrationForm = () => {
   const validateForm = () => {
     const newErrors = {};
     
-    if (!formData?.fullName?.trim()) {
+    if (!formData.fullName.trim()) {
       newErrors.fullName = 'Full name is required';
+    } else if (formData.fullName.trim().length < 2) {
+      newErrors.fullName = 'Full name must be at least 2 characters';
     }
     
-    if (!formData?.email?.trim()) {
+    if (!formData.email.trim()) {
       newErrors.email = 'Email address is required';
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/?.test(formData?.email)) {
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
       newErrors.email = 'Please enter a valid email address';
     }
     
-    if (!formData?.phoneNumber?.trim()) {
+    if (!formData.phoneNumber.trim()) {
       newErrors.phoneNumber = 'Phone number is required';
-    } else if (!/^\+?[1-9]\d{1,14}$/?.test(formData?.phoneNumber?.replace(/\s/g, ''))) {
-      newErrors.phoneNumber = 'Please enter a valid phone number';
+    } else if (!/^\+?[1-9]\d{1,14}$/.test(formData.phoneNumber.replace(/\s/g, ''))) {
+      newErrors.phoneNumber = 'Please enter a valid phone number with country code';
     }
     
-    if (!formData?.password) {
+    if (!formData.password) {
       newErrors.password = 'Password is required';
-    } else if (formData?.password?.length < 8) {
+    } else if (formData.password.length < 8) {
       newErrors.password = 'Password must be at least 8 characters long';
+    } else if (passwordStrength < 50) {
+      newErrors.password = 'Password is too weak. Please include uppercase, lowercase, numbers, and special characters';
     }
     
-    if (!formData?.confirmPassword) {
+    if (!formData.confirmPassword) {
       newErrors.confirmPassword = 'Please confirm your password';
-    } else if (formData?.password !== formData?.confirmPassword) {
+    } else if (formData.password !== formData.confirmPassword) {
       newErrors.confirmPassword = 'Passwords do not match';
     }
     
-    if (!formData?.agreeToTerms) {
+    if (!formData.agreeToTerms) {
       newErrors.agreeToTerms = 'You must agree to the terms and conditions';
     }
     
     setErrors(newErrors);
-    return Object.keys(newErrors)?.length === 0;
+    return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = async (e) => {
-    e?.preventDefault();
+    e.preventDefault();
     
     if (!validateForm()) {
       return;
     }
     
     setIsLoading(true);
+    onRegistrationStart();
     
     try {
       const result = await register(formData);
       
-      if (result?.success) {
-        // Show success message
-        console.log('Registration successful:', result?.message);
-        
-        // Navigate to login or verification page
-        navigate('/user-login', { 
-          state: { 
-            message: result?.message,
-            email: formData?.email 
-          } 
-        });
+      if (result.success) {
+        onRegistrationSuccess();
+      } else {
+        onRegistrationError(result.error || 'Registration failed. Please try again.');
       }
     } catch (error) {
       console.error('Registration failed:', error);
-      setErrors({ submit: error?.message || 'Registration failed. Please try again.' });
+      let errorMessage = 'Registration failed. Please try again.';
+      
+      if (error.message.includes('email')) {
+        errorMessage = 'This email is already registered. Please try logging in or use a different email.';
+      } else if (error.message.includes('phone')) {
+        errorMessage = 'This phone number is already registered. Please try logging in or use a different phone number.';
+      }
+      
+      setErrors({ submit: errorMessage });
+      onRegistrationError(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -161,135 +170,122 @@ const RegistrationForm = () => {
   };
 
   const getPasswordStrengthText = () => {
-    if (passwordStrength < 25) return 'Weak';
-    if (passwordStrength < 50) return 'Fair';
+    if (passwordStrength < 25) return 'Very Weak';
+    if (passwordStrength < 50) return 'Weak';
     if (passwordStrength < 75) return 'Good';
-    return 'Strong';
+    if (passwordStrength < 90) return 'Strong';
+    return 'Very Strong';
   };
 
   return (
     <div className="w-full max-w-lg mx-auto">
-      <div className="bg-white rounded-3xl shadow-2xl border-0 p-8 lg:p-10">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl mb-4 shadow-lg">
-            <Icon name="UserPlus" size={28} color="white" />
+      <div className="bg-card rounded-xl p-6 shadow-warm border border-border">
+        <div className="text-center mb-6">
+          <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-3">
+            <Icon name="UserPlus" size={24} className="text-primary" />
           </div>
-          <h2 className="text-3xl font-bold bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent mb-2">
-            Join Mukando
-          </h2>
-          <p className="text-gray-500 text-lg">
+          <h2 className="text-2xl font-bold text-foreground">Join Mukando</h2>
+          <p className="text-muted-foreground mt-1">
             Start your community savings journey
           </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-5">
           {/* Full Name */}
-          <div className="space-y-2">
-            <Input
-              label="Full Name"
-              type="text"
-              placeholder="Enter your full name"
-              value={formData?.fullName}
-              onChange={(e) => handleInputChange('fullName', e?.target?.value)}
-              error={errors?.fullName}
-              className="h-14 text-lg rounded-2xl border-2 border-gray-200 focus:border-blue-500 focus:ring-0 transition-all duration-200"
-              required
-            />
-          </div>
+          <Input
+            label="Full Name"
+            type="text"
+            placeholder="Enter your full name"
+            value={formData.fullName}
+            onChange={(e) => handleInputChange('fullName', e.target.value)}
+            error={errors.fullName}
+            required
+          />
 
           {/* Email */}
-          <div className="space-y-2">
-            <Input
-              label="Email Address"
-              type="email"
-              placeholder="Enter your email address"
-              value={formData?.email}
-              onChange={(e) => handleInputChange('email', e?.target?.value)}
-              error={errors?.email}
-              className="h-14 text-lg rounded-2xl border-2 border-gray-200 focus:border-blue-500 focus:ring-0 transition-all duration-200"
-              required
-            />
-          </div>
+          <Input
+            label="Email Address"
+            type="email"
+            placeholder="Enter your email address"
+            value={formData.email}
+            onChange={(e) => handleInputChange('email', e.target.value)}
+            error={errors.email}
+            required
+          />
 
           {/* Phone Number */}
-          <div className="space-y-2">
-            <Input
-              label="Phone Number"
-              type="tel"
-              placeholder="+263 77 123 4567"
-              value={formData?.phoneNumber}
-              onChange={(e) => handleInputChange('phoneNumber', e?.target?.value)}
-              error={errors?.phoneNumber}
-              description="Include country code (e.g., +263 for Zimbabwe)"
-              className="h-14 text-lg rounded-2xl border-2 border-gray-200 focus:border-blue-500 focus:ring-0 transition-all duration-200"
-              required
-            />
-          </div>
+          <Input
+            label="Phone Number"
+            type="tel"
+            placeholder="+263 77 123 4567"
+            value={formData.phoneNumber}
+            onChange={(e) => handleInputChange('phoneNumber', e.target.value)}
+            error={errors.phoneNumber}
+            description="Include country code (e.g., +263 for Zimbabwe)"
+            required
+          />
 
-          {/* Country and Mobile Money Provider in a Grid */}
+          {/* Country and Mobile Money Provider */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Select
               label="Country"
               options={countryOptions}
-              value={formData?.country}
+              value={formData.country}
               onChange={(value) => handleInputChange('country', value)}
-              className="rounded-2xl border-2 border-gray-200 focus:border-blue-500 focus:ring-0"
               required
             />
 
-            {mobileMoneyOptions?.[formData?.country] && (
+            {mobileMoneyOptions[formData.country] && (
               <Select
                 label="Mobile Money Provider"
-                options={mobileMoneyOptions?.[formData?.country]}
-                value={formData?.mobileMoneyProvider}
+                options={mobileMoneyOptions[formData.country]}
+                value={formData.mobileMoneyProvider}
                 onChange={(value) => handleInputChange('mobileMoneyProvider', value)}
                 placeholder="Select provider"
                 description="For USD payments and withdrawals"
-                className="rounded-2xl border-2 border-gray-200 focus:border-blue-500 focus:ring-0"
               />
             )}
           </div>
 
           {/* Password */}
-          <div className="space-y-3">
+          <div className="space-y-2">
             <div className="relative">
               <Input
                 label="Password"
                 type={showPassword ? 'text' : 'password'}
                 placeholder="Create a strong password"
-                value={formData?.password}
-                onChange={(e) => handleInputChange('password', e?.target?.value)}
-                error={errors?.password}
-                className="h-14 text-lg rounded-2xl border-2 border-gray-200 focus:border-blue-500 focus:ring-0 pr-12 transition-all duration-200"
+                value={formData.password}
+                onChange={(e) => handleInputChange('password', e.target.value)}
+                error={errors.password}
                 required
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-4 top-12 text-gray-400 hover:text-gray-600 transition-colors"
+                className="absolute right-3 top-9 text-muted-foreground hover:text-foreground transition-colors"
+                aria-label={showPassword ? 'Hide password' : 'Show password'}
               >
-                <Icon name={showPassword ? 'EyeOff' : 'Eye'} size={20} />
+                <Icon name={showPassword ? 'EyeOff' : 'Eye'} size={18} />
               </button>
             </div>
             
             {/* Password Strength Indicator */}
-            {formData?.password && (
+            {formData.password && (
               <div className="space-y-2">
                 <div className="flex items-center justify-between text-sm">
-                  <span className="text-gray-500">Password strength:</span>
-                  <span className={`font-semibold ${
+                  <span className="text-muted-foreground">Password strength:</span>
+                  <span className={`font-medium ${
                     passwordStrength < 50 ? 'text-red-500' : 
                     passwordStrength < 75 ? 'text-yellow-500' : 'text-green-500'
                   }`}>
                     {getPasswordStrengthText()}
                   </span>
                 </div>
-                <div className="w-full bg-gray-200 rounded-full h-3">
+                <div className="w-full bg-muted rounded-full h-2">
                   <div
-                    className={`h-3 rounded-full transition-all duration-300 ${getPasswordStrengthColor()}`}
+                    className={`h-2 rounded-full transition-all duration-300 ${getPasswordStrengthColor()}`}
                     style={{ width: `${passwordStrength}%` }}
-                  ></div>
+                  />
                 </div>
               </div>
             )}
@@ -301,46 +297,55 @@ const RegistrationForm = () => {
               label="Confirm Password"
               type={showConfirmPassword ? 'text' : 'password'}
               placeholder="Confirm your password"
-              value={formData?.confirmPassword}
-              onChange={(e) => handleInputChange('confirmPassword', e?.target?.value)}
-              error={errors?.confirmPassword}
-              className="h-14 text-lg rounded-2xl border-2 border-gray-200 focus:border-blue-500 focus:ring-0 pr-12 transition-all duration-200"
+              value={formData.confirmPassword}
+              onChange={(e) => handleInputChange('confirmPassword', e.target.value)}
+              error={errors.confirmPassword}
               required
             />
             <button
               type="button"
               onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-              className="absolute right-4 top-12 text-gray-400 hover:text-gray-600 transition-colors"
+              className="absolute right-3 top-9 text-muted-foreground hover:text-foreground transition-colors"
+              aria-label={showConfirmPassword ? 'Hide password' : 'Show password'}
             >
-              <Icon name={showConfirmPassword ? 'EyeOff' : 'Eye'} size={20} />
+              <Icon name={showConfirmPassword ? 'EyeOff' : 'Eye'} size={18} />
             </button>
           </div>
 
           {/* Terms and Conditions */}
-          <div className="space-y-4">
+          <div className="space-y-3">
             <Checkbox
-              label="I agree to the Terms and Conditions and Privacy Policy"
-              checked={formData?.agreeToTerms}
-              onChange={(e) => handleInputChange('agreeToTerms', e?.target?.checked)}
-              error={errors?.agreeToTerms}
-              className="text-sm"
+              label={
+                <span>
+                  I agree to the{' '}
+                  <a href="/terms" className="text-primary hover:underline">
+                    Terms and Conditions
+                  </a>{' '}
+                  and{' '}
+                  <a href="/privacy" className="text-primary hover:underline">
+                    Privacy Policy
+                  </a>
+                </span>
+              }
+              checked={formData.agreeToTerms}
+              onChange={(e) => handleInputChange('agreeToTerms', e.target.checked)}
+              error={errors.agreeToTerms}
               required
             />
             
             <Checkbox
               label="Subscribe to newsletter for updates and financial tips"
-              checked={formData?.subscribeNewsletter}
-              onChange={(e) => handleInputChange('subscribeNewsletter', e?.target?.checked)}
-              className="text-sm"
+              checked={formData.subscribeNewsletter}
+              onChange={(e) => handleInputChange('subscribeNewsletter', e.target.checked)}
             />
           </div>
 
           {/* Submit Error */}
-          {errors?.submit && (
-            <div className="p-4 bg-red-50 border-2 border-red-200 rounded-2xl">
-              <div className="flex items-start gap-3">
-                <Icon name="AlertCircle" size={20} className="text-red-500 mt-0.5 flex-shrink-0" />
-                <p className="text-sm text-red-600 leading-relaxed">{errors?.submit}</p>
+          {errors.submit && (
+            <div className="p-3 bg-error/10 border border-error/20 rounded-lg">
+              <div className="flex items-start gap-2">
+                <Icon name="AlertCircle" size={18} className="text-error mt-0.5 flex-shrink-0" />
+                <p className="text-sm text-error">{errors.submit}</p>
               </div>
             </div>
           )}
@@ -352,7 +357,6 @@ const RegistrationForm = () => {
             size="lg"
             fullWidth
             loading={isLoading}
-            className="h-14 text-lg font-semibold rounded-2xl bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 transform hover:scale-[1.02] transition-all duration-200 shadow-lg hover:shadow-xl"
             iconName="UserPlus"
             iconPosition="left"
           >
@@ -360,13 +364,13 @@ const RegistrationForm = () => {
           </Button>
 
           {/* Login Link */}
-          <div className="text-center pt-4">
-            <p className="text-gray-500">
+          <div className="text-center pt-3">
+            <p className="text-muted-foreground">
               Already have an account?{' '}
               <button
                 type="button"
                 onClick={() => navigate('/user-login')}
-                className="font-semibold text-blue-600 hover:text-blue-700 transition-colors"
+                className="font-semibold text-primary hover:text-primary/80 transition-colors"
               >
                 Sign in here
               </button>

@@ -8,20 +8,35 @@ function Icon({
     color = "currentColor",
     className = "",
     strokeWidth = 2,
+    ariaHidden = true,
     ...props
 }) {
-    const IconComponent = LucideIcons?.[name];
+  const IconComponent = LucideIcons[name];
 
-    if (!IconComponent) {
-        return <HelpCircle size={size} color="gray" strokeWidth={strokeWidth} className={className} {...props} />;
-    }
+  if (!IconComponent) {
+    console.warn(`Icon "${name}" not found in Lucide Icons`);
+    return (
+      <HelpCircle 
+        size={size} 
+        color={color} 
+        strokeWidth={strokeWidth} 
+        className={className} 
+        aria-hidden={ariaHidden}
+        {...props} 
+      />
+    );
+  }
 
-    return <IconComponent
-        size={size}
-        color={color}
-        strokeWidth={strokeWidth}
-        className={className}
-        {...props}
-    />;
+  return (
+    <IconComponent
+      size={size}
+      color={color}
+      strokeWidth={strokeWidth}
+      className={className}
+      aria-hidden={ariaHidden}
+      {...props}
+    />
+  );
 }
+
 export default Icon;

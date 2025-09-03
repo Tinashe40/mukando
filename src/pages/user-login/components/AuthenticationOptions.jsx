@@ -1,33 +1,49 @@
 import React, { useState } from 'react';
+import { useAuth } from '../../../contexts/AuthContext';
 import Icon from '../../../components/AppIcon';
 import Button from '../../../components/ui/Button';
 import Input from '../../../components/ui/Input';
 
 const AuthenticationOptions = () => {
+  const { socialLogin } = useAuth();
   const [showMFA, setShowMFA] = useState(false);
   const [mfaCode, setMfaCode] = useState('');
   const [isVerifying, setIsVerifying] = useState(false);
+  const [isLoading, setIsLoading] = useState(null);
 
   const socialLoginOptions = [
     {
       name: 'Google',
       icon: 'Chrome',
-      color: 'bg-red-500',
-      available: false
+      provider: 'google',
+      available: true,
     },
     {
       name: 'Facebook',
       icon: 'Facebook',
-      color: 'bg-blue-600',
-      available: false
+      provider: 'facebook',
+      available: true,
     },
     {
       name: 'WhatsApp',
       icon: 'MessageCircle',
-      color: 'bg-green-500',
-      available: false
-    }
+      provider: 'whatsapp',
+      available: false, // WhatsApp login is not directly supported
+    },
   ];
+
+  const handleSocialLogin = async (provider) => {
+    setIsLoading(provider);
+    try {
+      await socialLogin(provider);
+      // The user will be redirected to the social provider's login page.
+      // After successful login, they will be redirected back to the app.
+    } catch (error) {
+      console.error(`Error with ${provider} login:`, error);
+    } finally {
+      setIsLoading(null);
+    }
+  };
 
   const handleMFAVerification = async () => {
     if (!mfaCode || mfaCode?.length !== 6) return;
@@ -137,34 +153,33 @@ const AuthenticationOptions = () => {
           </Button>
         </div>
       </div>
-      {/* Social Login (Coming Soon) */}
-      <div className="bg-card rounded-lg p-6 border border-border shadow-warm opacity-60">
+      {/* Social Login */}
+      <div className="bg-card rounded-lg p-6 border border-border shadow-warm">
         <div className="flex items-center gap-2 mb-4">
           <Icon name="Zap" size={20} className="text-warning" />
           <h3 className="font-semibold text-foreground">Social Login</h3>
-          <span className="text-xs bg-warning/20 text-warning px-2 py-1 rounded-full">
-            Coming Soon
-          </span>
         </div>
         
         <div className="space-y-2">
-          {socialLoginOptions?.map((option, index) => (
+          {socialLoginOptions?.map((option) => (
             <Button
-              key={index}
+              key={option.provider}
               variant="outline"
-              disabled={!option?.available}
-              iconName={option?.icon}
+              onClick={() => handleSocialLogin(option.provider)}
+              disabled={!option.available || isLoading === option.provider}
+              loading={isLoading === option.provider}
+              iconName={option.icon}
               iconPosition="left"
               fullWidth
-              className="justify-start opacity-50"
+              className="justify-start"
             >
-              Continue with {option?.name}
+              Continue with {option.name}
             </Button>
           ))}
         </div>
         
         <p className="text-xs text-muted-foreground mt-3">
-          Social login options will be available in future updates
+          Login using your favorite social accounts.
         </p>
       </div>
       {/* Security Notice */}
@@ -183,5 +198,6 @@ const AuthenticationOptions = () => {
     </div>
   );
 };
+
 
 export default AuthenticationOptions;
