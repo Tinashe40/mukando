@@ -1,10 +1,10 @@
-import React, { useState } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
-import { useAuth } from '../../../contexts/AuthContext';
+import { useState } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import Icon from '../../../components/AppIcon';
 import Button from '../../../components/ui/Button';
-import Input from '../../../components/ui/Input';
 import { Checkbox } from '../../../components/ui/Checkbox';
+import Input from '../../../components/ui/Input';
+import { useAuth } from '../../../contexts/AuthContext';
 
 const LoginForm = () => {
   const navigate = useNavigate();
@@ -256,7 +256,7 @@ const LoginForm = () => {
               Do not have an account?{' '}
               <button
                 type="button"
-                onClick={() => navigate('/user-registration')}
+                onClick={() => navigate('/auth/register')}
                 className="font-semibold text-blue-600 hover:text-blue-700 transition-colors"
               >
                 Create new account

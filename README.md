@@ -1,104 +1,57 @@
-# React
+# Mukando: Community Savings Platform
 
-A modern React-based project utilizing the latest frontend technologies and tools for building responsive web applications.
+Mukando is a modern, full-stack web application designed to facilitate community savings. It provides financial tools for groups and individuals, featuring user authentication, group management, loan requests, payment processing, and data analytics.
 
-## 🚀 Features
+## 🚀 Key Technologies
 
-- **React 18** - React version with improved rendering and concurrent features
-- **Vite** - Lightning-fast build tool and development server
-- **Redux Toolkit** - State management with simplified Redux setup
-- **TailwindCSS** - Utility-first CSS framework with extensive customization
-- **React Router v6** - Declarative routing for React applications
-- **Data Visualization** - Integrated D3.js and Recharts for powerful data visualization
-- **Form Management** - React Hook Form for efficient form handling
-- **Animation** - Framer Motion for smooth UI animations
-- **Testing** - Jest and React Testing Library setup
+*   **Frontend:** React 18, Vite, Redux Toolkit, Tailwind CSS, React Router v6
+*   **Backend:** Supabase (PostgreSQL, Authentication, Storage)
+*   **Styling:** Tailwind CSS with a custom design system
+*   **Data Visualization:** D3.js and Recharts
+*   **Form Management:** React Hook Form
+*   **Animation:** Framer Motion
 
-## 📋 Prerequisites
+## 🛠️ Building and Running
 
-- Node.js (v14.x or higher)
-- npm or yarn
+### Prerequisites
 
-## 🛠️ Installation
+*   Node.js (v14.x or higher)
+*   npm or yarn
+*   A Supabase project with the necessary environment variables set in a `.env` file.
 
-1. Install dependencies:
-   ```bash
-   npm install
-   # or
-   yarn install
-   ```
-   
-2. Start the development server:
-   ```bash
-   npm start
-   # or
-   yarn start
-   ```
+### Key Commands
 
-## 📁 Project Structure
+*   **Install Dependencies:**
+    ```bash
+    npm install
+    # or
+    yarn install
+    ```
 
-```
-react_app/
-├── public/             # Static assets
-├── src/
-│   ├── components/     # Reusable UI components
-│   ├── pages/          # Page components
-│   ├── styles/         # Global styles and Tailwind configuration
-│   ├── App.jsx         # Main application component
-│   ├── Routes.jsx      # Application routes
-│   └── index.jsx       # Application entry point
-├── .env                # Environment variables
-├── index.html          # HTML template
-├── package.json        # Project dependencies and scripts
-├── tailwind.config.js  # Tailwind CSS configuration
-└── vite.config.js      # Vite configuration
-```
+*   **Start the Development Server:**
+    ```bash
+    npm start
+    # or
+    yarn start
+    ```
+    The application will be available at `http://localhost:4028`.
 
-## 🧩 Adding Routes
+*   **Build for Production:**
+    ```bash
+    npm run build
+    ```
+    This will create a `build` directory with the production-ready assets.
 
-To add new routes to the application, update the `Routes.jsx` file:
+*   **Preview the Production Build:**
+    ```bash
+    npm run serve
+    ```
 
-```jsx
-import { useRoutes } from "react-router-dom";
-import HomePage from "pages/HomePage";
-import AboutPage from "pages/AboutPage";
+## 📝 Development Conventions
 
-const ProjectRoutes = () => {
-  let element = useRoutes([
-    { path: "/", element: <HomePage /> },
-    { path: "/about", element: <AboutPage /> },
-    // Add more routes as needed
-  ]);
-
-  return element;
-};
-```
-
-## 🎨 Styling
-
-This project uses Tailwind CSS for styling. The configuration includes:
-
-- Forms plugin for form styling
-- Typography plugin for text styling
-- Aspect ratio plugin for responsive elements
-- Container queries for component-specific responsive design
-- Fluid typography for responsive text
-- Animation utilities
-
-## 📱 Responsive Design
-
-The app is built with responsive design using Tailwind CSS breakpoints.
-
-
-## 📦 Deployment
-
-Build the application for production:
-
-```bash
-npm run build
-```
-
-## 🙏 Acknowledgments
-
-- Powered by React and Vite
-- Styled with Tailwind CSS
+*   **Routing:** New pages and routes should be added to `src/Routes.jsx`.
+*   **Styling:** The project uses Tailwind CSS with a custom theme defined in `tailwind.config.js`. Utility classes should be used for styling components.
+*   **State Management:** Redux Toolkit is used for global state management. For component-level state, use React hooks.
+*   **Authentication:** Authentication is handled by Supabase. The `AuthContext` at `src/contexts/AuthContext.jsx` provides user data and authentication methods throughout the application.
+*   **Database:** The database schema is managed through Supabase migrations located in the `supabase/migrations` directory.
+*   **API Interaction:** The Supabase client is initialized in `src/lib/supabase.js`. This file also contains helper functions for interacting with the database.

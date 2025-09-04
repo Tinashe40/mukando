@@ -1,4 +1,3 @@
-// PesePay Direct API Service - Using REST endpoints directly
 import axios from 'axios';
 
 class PesePayAPIService {
