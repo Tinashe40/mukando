@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useState } from 'react';
-import { getUserProfile, supabase } from '../lib/supabase';
+import { getUserProfile, getUserPermissions, supabase } from '../lib/supabase';
 
 const AuthContext = createContext()
 
@@ -32,6 +32,10 @@ export const AuthProvider = ({ children }) => {
           // Get user profile
           const userProfile = await getUserProfile(session?.user?.id)
           setProfile(userProfile)
+
+          // Get user permissions
+          const userPermissions = await getUserPermissions(userProfile?.role_id)
+          setPermissions(userPermissions)
         }
       } catch (error) {
         console.error('Error initializing auth:', error)
@@ -52,6 +56,10 @@ export const AuthProvider = ({ children }) => {
           // Get user profile
           const userProfile = await getUserProfile(session?.user?.id)
           setProfile(userProfile)
+
+          // Get user permissions
+          const userPermissions = await getUserPermissions(userProfile?.role_id)
+          setPermissions(userPermissions)
           
           // Update last login in profile
           if (event === 'SIGNED_IN') {
@@ -276,6 +284,7 @@ export const AuthProvider = ({ children }) => {
     // State
     user,
     profile,
+    permissions,
     isLoading,
     isAuthenticated,
     

@@ -133,27 +133,53 @@ class PesePayAPIService {
     return `${prefix}${timestamp?.slice(-6)}${random}`;
   }
 
-  // Simple base64 encoding for basic data protection (replacing CryptoJS)
-  encryptData(data) {
-    if (!data) return data;
-    
+  async encryptData(data) {
     try {
-      return btoa(JSON.stringify(data));
+      const iv = window.crypto.getRandomValues(new Uint8Array(12));
+      const key = await window.crypto.subtle.importKey(
+        'raw',
+        new TextEncoder().encode(this.encryptionKey),
+        { name: 'AES-GCM', length: 256 },
+        false,
+        ['encrypt']
+      );
+      const encryptedData = await window.crypto.subtle.encrypt(
+        { name: 'AES-GCM', iv },
+        key,
+        new TextEncoder().encode(JSON.stringify(data))
+      );
+      const encryptedDataArray = new Uint8Array(encryptedData);
+      const ivArray = Array.from(iv);
+      const encryptedArray = Array.from(encryptedDataArray);
+      const payload = `${btoa(String.fromCharCode(...ivArray))}:${btoa(String.fromCharCode(...encryptedArray))}`;
+      return payload;
     } catch (error) {
-      console.warn('Data encoding failed:', error);
-      return data;
+      console.error('Encryption failed:', error);
+      throw new Error('Failed to encrypt payment data.');
     }
   }
 
-  // Simple base64 decoding
-  decryptData(encodedData) {
-    if (!encodedData) return encodedData;
-    
+  async decryptData(encryptedPayload) {
     try {
-      return JSON.parse(atob(encodedData));
+      const [iv_b64, encrypted_b64] = encryptedPayload.split(':');
+      const iv = new Uint8Array(atob(iv_b64).split('').map(char => char.charCodeAt(0)));
+      const encrypted = new Uint8Array(atob(encrypted_b64).split('').map(char => char.charCodeAt(0)));
+      const key = await window.crypto.subtle.importKey(
+        'raw',
+        new TextEncoder().encode(this.encryptionKey),
+        { name: 'AES-GCM', length: 256 },
+        false,
+        ['decrypt']
+      );
+      const decryptedData = await window.crypto.subtle.decrypt(
+        { name: 'AES-GCM', iv },
+        key,
+        encrypted
+      );
+      return JSON.parse(new TextDecoder().decode(decryptedData));
     } catch (error) {
-      console.warn('Data decoding failed:', error);
-      return encodedData;
+      console.error('Decryption failed:', error);
+      throw new Error('Failed to decrypt payment data.');
     }
   }
 
@@ -196,7 +222,6 @@ class PesePayAPIService {
       
       // Prepare transaction data according to PesePay API specs
       const transactionData = {
-        referenceNumber: referenceNumber,
         amountDetails: {
           amount: parseFloat(paymentData?.amount),
           currencyCode: paymentData?.currency || 'USD'
@@ -204,22 +229,15 @@ class PesePayAPIService {
         reasonForPayment: reasonForPayment,
         resultUrl: this.resultUrl,
         returnUrl: this.returnUrl,
-        customerDetails: {
-          customerName: paymentData?.customerName || 'Group Member',
-          customerSurname: paymentData?.customerSurname || '',
-          customerEmail: paymentData?.customerEmail || 'member@mukando.com',
-          customerPhone: paymentData?.customerPhone || paymentData?.phoneNumber || ''
-        },
-        // Add additional fields for better tracking
-        applicationName: 'Mukando',
-        merchantReference: paymentData?.purpose || 'payment'
       };
 
+      const encryptedPayload = await this.encryptData(transactionData);
+
       // Call PesePay initiate-transaction endpoint
-      const response = await this.api?.post('/api/v1/payments/initiate-transaction', transactionData);
+      const response = await this.api?.post('/v1/payments/initiate', { payload: encryptedPayload });
 
       if (response?.data?.success || response?.data?.status === 'success') {
-        const responseData = response?.data?.data || response?.data;
+        const responseData = await this.decryptData(response?.data?.payload);
         
         console.log('PesePay payment initiated successfully via REST API');
         return {
