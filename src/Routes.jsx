@@ -16,6 +16,15 @@ import GroupManagement from './pages/group-management';
 import LoanRequest from './pages/loan-request';
 import NotificationsCenter from './pages/notifications-center';
 import PaymentProcessing from './pages/payment-processing';
+import CreateGroup from './pages/group-creation';
+import ContributionHistory from './pages/contribution-history';
+import RecordContribution from './pages/record-contribution';
+import RecordRepayment from './pages/record-repayment';
+import RepaymentHistory from './pages/repayment-history';
+import ReportGeneration from './pages/report-generation';
+import AuditLog from './pages/audit-log';
+import AdminDashboard from './pages/admin-dashboard';
+import PublicGroups from './pages/public-groups';
 import { useAuth } from './contexts/AuthContext';
 
 const AuthenticatedRoute = ({ children }) => {
@@ -49,6 +58,15 @@ const Routes = () => {
             <Route path="loans" element={<LoanRequest />} />
             <Route path="notifications" element={<NotificationsCenter />} />
             <Route path="payments" element={<PaymentProcessing />} />
+            <Route path="groups/create" element={<CreateGroup />} />
+            <Route path="contributions" element={<ContributionHistory />} />
+            <Route path="contributions/record" element={withAuthorization(RecordContribution, ['admin', 'treasurer'])} />
+            <Route path="loans/repay" element={<RecordRepayment />} />
+            <Route path="loans/repayments" element={withAuthorization(RepaymentHistory, ['admin', 'treasurer'])} />
+            <Route path="reports" element={withAuthorization(ReportGeneration, ['admin', 'treasurer'])} />
+            <Route path="audit-log" element={withAuthorization(AuditLog, ['admin', 'superadmin'])} />
+            <Route path="admin-dashboard" element={withAuthorization(AdminDashboard, ['admin', 'superadmin'])} />
+            <Route path="public-groups" element={<PublicGroups />} />
           </Route>
 
           {/* Authentication Routes */}

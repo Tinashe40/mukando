@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import Icon from '../AppIcon';
 import Button from './Button';
@@ -9,6 +9,17 @@ const Header = ({ onMenuToggle, isMenuOpen = false }) => {
   const navigate = useNavigate();
   const { user, profile, logout } = useAuth();
   const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const [theme, setTheme] = useState(localStorage.getItem('theme') || 'light');
+
+  useEffect(() => {
+    document.documentElement.classList.remove('light', 'dark');
+    document.documentElement.classList.add(theme);
+    localStorage.setItem('theme', theme);
+  }, [theme]);
+
+  const toggleTheme = () => {
+    setTheme(prevTheme => (prevTheme === 'light' ? 'dark' : 'light'));
+  };
 
   const handleLogout = async () => {
     await logout();
@@ -62,6 +73,14 @@ const Header = ({ onMenuToggle, isMenuOpen = false }) => {
         </nav>
 
         <div className="flex items-center gap-2">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={toggleTheme}
+            className="text-muted-foreground hover:text-foreground"
+          >
+            <Icon name={theme === 'light' ? 'Moon' : 'Sun'} size={20} />
+          </Button>
           <div className="relative">
             <Button
               variant="ghost"

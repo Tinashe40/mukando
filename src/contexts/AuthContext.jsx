@@ -134,18 +134,25 @@ export const AuthProvider = ({ children }) => {
   // Login user
   const login = async (credentials) => {
     setIsLoading(true)
+    setError(null)
     try {
       const { data, error } = await supabase?.auth?.signInWithPassword({
         email: credentials?.emailOrPhone,
         password: credentials?.password
       })
 
-      if (error) throw error
+      if (error) {
+        if (error.message.includes('Invalid login credentials')) {
+          throw new Error('Invalid email or password. Please try again.');
+        }
+        throw error;
+      }
 
       return { success: true, user: data?.user };
     } catch (error) {
       console.error('Login error:', error)
-      throw new Error(error.message || 'Login failed')
+      setError(error.message || 'Login failed. Please try again.');
+      return { success: false, error: error.message };
     } finally {
       setIsLoading(false)
     }

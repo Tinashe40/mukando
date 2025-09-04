@@ -70,10 +70,10 @@ const GroupAnalytics = () => {
         return (
           <div className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              <KPICard title="Total Group Savings" value={`$${analyticsData.kpis?.total_savings || 0}`} change="+12.5%" changeType="positive" icon="PiggyBank" color="primary" />
-              <KPICard title="Active Loans" value={`$${analyticsData.kpis?.active_loans || 0}`} change="+8.2%" changeType="positive" icon="CreditCard" color="secondary" />
-              <KPICard title="Repayment Rate" value={`${analyticsData.kpis?.repayment_rate || 0}%`} change="-2.1%" changeType="negative" icon="TrendingUp" color="success" />
-              <KPICard title="Member Participation" value={`${analyticsData.kpis?.member_participation || 0}%`} change="+5.3%" changeType="positive" icon="Users" color="warning" />
+              <KPICard title="Total Group Savings" value={`$${analyticsData.kpis?.total_savings || 0}`} change={`+${analyticsData.kpis?.savings_change_percentage || 0}%`} changeType="positive" icon="PiggyBank" color="primary" />
+              <KPICard title="Active Loans" value={`$${analyticsData.kpis?.active_loans || 0}`} change={`+${analyticsData.kpis?.active_loans_percentage || 0}%`} changeType="positive" icon="CreditCard" color="secondary" />
+              <KPICard title="Repayment Rate" value={`${analyticsData.kpis?.repayment_rate || 0}%`} change={`+${analyticsData.kpis?.repayment_rate_change || 0}%`} changeType="positive" icon="TrendingUp" color="success" />
+              <KPICard title="Member Participation" value={`${analyticsData.kpis?.member_participation || 0}%`} change={`+${analyticsData.kpis?.member_participation_change || 0}%`} changeType="positive" icon="Users" color="warning" />
             </div>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <ChartContainer title="Savings Growth Trend">
@@ -130,7 +130,7 @@ const GroupAnalytics = () => {
           <div className="mb-6">
             <div className="border-b border-border">
               <nav className="flex space-x-8 overflow-x-auto">
-                <button onClick={() => setActiveTab('overview')} className={`flex items-center gap-2 py-4 px-1 border-b-2 font-medium text-sm whitespace-nowrap transition-colors duration-200 ${activeTab === 'overview' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground hover:border-muted'}`}>
+                <button onClick={() => setActiveTab('overview')} className={`flex items-center gap-2 py-4 px-1 border-b-2 font-medium text-sm whitespace-nowrap transition-colors ${activeTab === 'overview' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground hover:border-muted'}`}>
                   <Icon name="BarChart3" size={16} />
                   Overview
                 </button>

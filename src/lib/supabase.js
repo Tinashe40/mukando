@@ -1,417 +1,218 @@
-// lib/supabase.js
 import { createClient } from '@supabase/supabase-js';
 
-const isValidUrl = (url) => {
-  try {
-    new URL(url);
-    return true;
-  } catch (_) {
-    return false;
-  }
-};
+// Initialize Supabase client
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-const validateSupabaseConfig = () => {
-  const supabaseUrl = import.meta.env?.VITE_SUPABASE_URL;
-  const supabaseAnonKey = import.meta.env?.VITE_SUPABASE_ANON_KEY;
+export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
-  if (!supabaseUrl || !supabaseAnonKey) {
-    throw new Error(
-      'Missing Supabase environment variables. ' +
-      'Please ensure VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY are set in your .env file'
-    );
-  }
-
-  if (!isValidUrl(supabaseUrl)) {
-    throw new Error(
-      `Invalid Supabase URL format: "${supabaseUrl}". ` +
-      'Please provide a valid URL for VITE_SUPABASE_URL'
-    );
-  }
-
-  return { supabaseUrl, supabaseAnonKey };
-};
-
-let supabaseClient = null;
-
-try {
-  const { supabaseUrl, supabaseAnonKey } = validateSupabaseConfig();
-  
-  supabaseClient = createClient(supabaseUrl, supabaseAnonKey, {
-    auth: {
-      autoRefreshToken: true,
-      persistSession: true,
-      detectSessionInUrl: true
-    },
-    global: {
-      headers: {
-        'x-application-name': 'mukando-app'
-      }
-    }
-  });
-  
-  console.log('Supabase client initialized successfully');
-} catch (error) {
-  console.error('Failed to initialize Supabase client:', error.message);
-  if (import.meta.env.MODE === 'development') {
-    throw error;
-  }
-}
-
-export const getCurrentUser = async () => {
-  if (!supabaseClient) {
-    console.error('Supabase client not initialized');
-    return null;
-  }
-
-  try {
-    const { data: { session }, error } = await supabaseClient.auth.getSession();
-    
-    if (error) {
-      console.error('Error getting user session:', error.message);
-      return null;
-    }
-    
-    return session?.user || null;
-  } catch (error) {
-    console.error('Unexpected error getting current user:', error.message);
-    return null;
-  }
-};
-
+// Authentication functions
 export const getUserProfile = async (userId) => {
-  if (!supabaseClient) {
-    console.error('Supabase client not initialized');
-    return null;
-  }
-
-  if (!userId) {
-    console.error('User ID is required to fetch profile');
-    return null;
-  }
-
-  try {
-    const { data, error } = await supabaseClient
-      .from('user_profiles')
-      .select('*, roles(name)')
-      .eq('id', userId)
-      .maybeSingle();
-
-    if (error) {
-      console.error('Error fetching user profile:', error.message);
-      return null;
-    }
-
-    return data;
-  } catch (error) {
-    console.error('Unexpected error fetching user profile:', error.message);
-    return null;
-  }
+  const { data, error } = await supabase.from('profiles').select('*').eq('id', userId).single();
+  if (error) console.error('Error fetching user profile:', error);
+  return data;
 };
 
-export const updateUserProfile = async (userId, updates) => {
-  if (!supabaseClient) {
-    throw new Error('Supabase client not initialized');
-  }
-
-  if (!userId) {
-    throw new Error('User ID is required to update profile');
-  }
-
-  try {
-    const { data, error } = await supabaseClient
-      .from('user_profiles')
-      .update({
-        ...updates,
-        updated_at: new Date().toISOString(),
-      })
-      .eq('id', userId)
-      .select()
-      .single();
-
-    if (error) {
-      throw new Error(`Failed to update user profile: ${error.message}`);
-    }
-
-    return data;
-  } catch (error) {
-    console.error('Error updating user profile:', error.message);
-    throw error;
-  }
+export const getUserPermissions = async (userId) => {
+  const { data, error } = await supabase.rpc('get_user_permissions', { p_user_id: userId });
+  if (error) console.error('Error fetching user permissions:', error);
+  return data;
 };
 
-export const getUserPermissions = async (roleId) => {
-  if (!supabaseClient) {
-    console.error('Supabase client not initialized');
-    return [];
-  }
-
-  if (!roleId) {
-    console.error('Role ID is required to fetch permissions');
-    return [];
-  }
-
-  try {
-    const { data, error } = await supabaseClient
-      .from('role_permissions')
-      .select('permissions:permission_id(name)')
-      .eq('role_id', roleId);
-
-    if (error) {
-      console.error('Error fetching user permissions:', error.message);
-      return [];
-    }
-
-    return data.map((item) => item.permissions.name);
-  } catch (error) {
-    console.error('Unexpected error fetching user permissions:', error.message);
-    return [];
-  }
+// Admin dashboard
+export const getAdminDashboardData = async () => {
+  const { data, error } = await supabase.rpc('get_admin_dashboard_data');
+  if (error) console.error('Error fetching admin dashboard data:', error);
+  return data;
 };
 
-export const getFinancialOverview = async (userId) => {
-  if (!supabaseClient) {
-    console.error('Supabase client not initialized');
-    return null;
-  }
-
-  if (!userId) {
-    console.error('User ID is required to fetch financial overview');
-    return null;
-  }
-
-  try {
-    const { data, error } = await supabaseClient
-      .rpc('get_user_financial_overview', { p_user_id: userId });
-
-    if (error) {
-      console.error('Error fetching financial overview:', error.message);
-      return null;
-    }
-
-    return data;
-  } catch (error) {
-    console.error('Unexpected error fetching financial overview:', error.message);
-    return null;
-  }
+// Audit log
+export const getAuditLogs = async () => {
+  const { data, error } = await supabase.from('audit_logs').select('*');
+  if (error) console.error('Error fetching audit logs:', error);
+  return data;
 };
 
-export const getRecentActivity = async (userId) => {
-  if (!supabaseClient) {
-    console.error('Supabase client not initialized');
-    return null;
-  }
+// Contribution history
+export const getContributionHistory = async (groupId) => {
+  const { data, error } = await supabase.from('contributions').select('*').eq('group_id', groupId);
+  if (error) console.error('Error fetching contribution history:', error);
+  return data;
+};
 
-  if (!userId) {
-    console.error('User ID is required to fetch recent activity');
-    return null;
-  }
-
-  try {
-    const { data, error } = await supabaseClient
-      .from('transactions')
-      .select('*, groups(name)')
-      .eq('user_id', userId)
-      .order('created_at', { ascending: false })
-      .limit(5);
-
-    if (error) {
-      console.error('Error fetching recent activity:', error.message);
-      return null;
-    }
-
+// Group analytics
+export const getGroupAnalytics = async (groupId) => {
+    const { data, error } = await supabase.rpc('get_group_analytics', { p_group_id: groupId });
+    if (error) console.error('Error fetching group analytics:', error);
     return data;
-  } catch (error) {
-    console.error('Unexpected error fetching recent activity:', error.message);
-    return null;
-  }
 };
 
 export const getUserGroups = async (userId) => {
-  if (!supabaseClient) {
-    console.error('Supabase client not initialized');
-    return null;
-  }
-
-  if (!userId) {
-    console.error('User ID is required to fetch user groups');
-    return null;
-  }
-
-  try {
-    const { data, error } = await supabaseClient
-      .from('group_members')
-      .select('*, groups(*)')
-      .eq('user_id', userId);
-
-    if (error) {
-      console.error('Error fetching user groups:', error.message);
-      return null;
-    }
-
-    return data.map(item => item.groups);
-  } catch (error) {
-    console.error('Unexpected error fetching user groups:', error.message);
-    return null;
-  }
+    const { data, error } = await supabase
+        .from('group_members')
+        .select('groups(*)')
+        .eq('user_id', userId);
+    if (error) console.error('Error fetching user groups:', error);
+    return data ? data.map(item => item.groups) : [];
 };
 
-export const getGroupAnalytics = async (groupId) => {
-  if (!supabaseClient) {
-    console.error('Supabase client not initialized');
-    return null;
-  }
-
-  if (!groupId) {
-    console.error('Group ID is required to fetch group analytics');
-    return null;
-  }
-
-  try {
-    const { data, error } = await supabaseClient
-      .rpc('get_group_analytics', { p_group_id: groupId });
-
-    if (error) {
-      console.error('Error fetching group analytics:', error.message);
-      return null;
-    }
-
-    return data;
-  } catch (error) {
-    console.error('Unexpected error fetching group analytics:', error.message);
-    return null;
-  }
+// Group creation
+export const createGroup = async (groupData) => {
+  const { data, error } = await supabase.from('groups').insert(groupData).select().single();
+  if (error) console.error('Error creating group:', error);
+  return data;
 };
 
+// Group management
 export const getGroupManagementData = async (groupId) => {
-  if (!supabaseClient) {
-    console.error('Supabase client not initialized');
-    return null;
-  }
-
-  if (!groupId) {
-    console.error('Group ID is required to fetch group management data');
-    return null;
-  }
-
-  try {
-    const { data, error } = await supabaseClient
-      .rpc('get_group_management_data', { p_group_id: groupId });
-
-    if (error) {
-      console.error('Error fetching group management data:', error.message);
-      return null;
-    }
-
+    const { data, error } = await supabase.rpc('get_group_management_data', { p_group_id: groupId });
+    if (error) console.error('Error fetching group management data:', error);
     return data;
-  } catch (error) {
-    console.error('Unexpected error fetching group management data:', error.message);
-    return null;
-  }
 };
 
-export const getLoanRequestData = async (userId) => {
-  if (!supabaseClient) {
-    console.error('Supabase client not initialized');
-    return null;
-  }
-
-  if (!userId) {
-    console.error('User ID is required to fetch loan request data');
-    return null;
-  }
-
-  try {
-    const { data, error } = await supabaseClient
-      .rpc('get_loan_request_data', { p_user_id: userId });
-
-    if (error) {
-      console.error('Error fetching loan request data:', error.message);
-      return null;
-    }
-
+export const inviteMember = async (invitation) => {
+    const { data, error } = await supabase.rpc('invite_member', { p_invitation: invitation });
+    if (error) console.error('Error inviting member:', error);
     return data;
-  } catch (error) {
-    console.error('Unexpected error fetching loan request data:', error.message);
-    return null;
-  }
 };
 
-export const submitLoanApplication = async (applicationData) => {
-  if (!supabaseClient) {
-    console.error('Supabase client not initialized');
-    return null;
-  }
-
-  try {
-    const { data, error } = await supabaseClient
-      .from('loans')
-      .insert([applicationData])
-      .select();
-
-    if (error) {
-      console.error('Error submitting loan application:', error.message);
-      return null;
-    }
-
+export const updateGroupSettings = async (groupId, settings) => {
+    const { data, error } = await supabase.rpc('update_group_settings', { p_group_id: groupId, p_settings: settings });
+    if (error) console.error('Error updating group settings:', error);
     return data;
-  } catch (error) {
-    console.error('Unexpected error submitting loan application:', error.message);
-    return null;
-  }
 };
 
-export const getPaymentProcessingData = async (userId) => {
-  if (!supabaseClient) {
-    console.error('Supabase client not initialized');
-    return null;
-  }
-
-  if (!userId) {
-    console.error('User ID is required to fetch payment processing data');
-    return null;
-  }
-
-  try {
-    const { data, error } = await supabaseClient
-      .rpc('get_payment_processing_data', { p_user_id: userId });
-
-    if (error) {
-      console.error('Error fetching payment processing data:', error.message);
-      return null;
-    }
-
+export const approveLoan = async (loanId) => {
+    const { data, error } = await supabase.rpc('approve_loan', { p_loan_id: loanId });
+    if (error) console.error('Error approving loan:', error);
     return data;
-  } catch (error) {
-    console.error('Unexpected error fetching payment processing data:', error.message);
-    return null;
-  }
 };
 
+export const rejectLoan = async (loanId) => {
+    const { data, error } = await supabase.rpc('reject_loan', { p_loan_id: loanId });
+    if (error) console.error('Error rejecting loan:', error);
+    return data;
+};
+
+
+// Loan request
+export const getLoanRequestData = async (groupId) => {
+    const { data, error } = await supabase.rpc('get_loan_request_data', { p_group_id: groupId });
+    if (error) console.error('Error fetching loan request data:', error);
+    return data;
+};
+
+export const submitLoanApplication = async (application) => {
+    const { data, error } = await supabase.from('loan_requests').insert(application).select().single();
+    if (error) console.error('Error submitting loan application:', error);
+    return data;
+};
+
+// Member dashboard
+export const getFinancialOverview = async (userId) => {
+    const { data, error } = await supabase.rpc('get_financial_overview', { p_user_id: userId });
+    if (error) console.error('Error fetching financial overview:', error);
+    return data;
+};
+
+export const getRecentActivity = async (userId) => {
+    // This is a guess. There is no specific migration for this.
+    // I will assume it gets the last 5 contributions and loans for the user.
+    const { data, error } = await supabase
+        .from('contributions')
+        .select('*')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false })
+        .limit(5);
+    if (error) console.error('Error fetching recent activity:', error);
+    return data;
+};
+
+// Notifications center
 export const getNotificationsCenterData = async (userId) => {
-  if (!supabaseClient) {
+    const { data, error } = await supabase.rpc('get_notifications_center_data', { p_user_id: userId });
+    if (error) console.error('Error fetching notifications center data:', error);
+    return data;
+};
+
+export const getNotificationSettings = async (userId) => {
+    const { data, error } = await supabase.from('notification_settings').select('*').eq('user_id', userId).single();
+    if (error) console.error('Error fetching notification settings:', error);
+    return data;
+};
+
+export const updateNotificationSettings = async (userId, settings) => {
+    const { data, error } = await supabase.from('notification_settings').update(settings).eq('user_id', userId);
+    if (error) console.error('Error updating notification settings:', error);
+    return data;
+};
+
+export const getScheduledNotifications = async (userId) => {
+    const { data, error } = await supabase.from('scheduled_notifications').select('*').eq('user_id', userId);
+    if (error) console.error('Error fetching scheduled notifications:', error);
+    return data;
+};
+
+// Payment processing
+export const getPaymentProcessingData = async (groupId) => {
+    const { data, error } = await supabase.rpc('get_payment_processing_data', { p_group_id: groupId });
+    if (error) console.error('Error fetching payment processing data:', error);
+    return data;
+};
+
+// Record contribution
+export const getUsers = async () => {
+    const { data, error } = await supabase.from('users').select('id, username');
+    if (error) console.error('Error fetching users:', error);
+    return data;
+};
+
+export const recordContribution = async (contribution) => {
+    const { data, error } = await supabase.from('contributions').insert(contribution);
+    if (error) console.error('Error recording contribution:', error);
+    return data;
+};
+
+// Record repayment
+export const getUserLoans = async (userId) => {
+    const { data, error } = await supabase.from('loans').select('*').eq('user_id', userId);
+    if (error) console.error('Error fetching user loans:', error);
+    return data;
+};
+
+export const recordRepayment = async (repayment) => {
+    const { data, error } = await supabase.from('loan_repayments').insert(repayment);
+    if (error) console.error('Error recording repayment:', error);
+    return data;
+};
+
+// Repayment history
+export const getAllRepayments = async (groupId) => {
+    const { data, error } = await supabase.from('loan_repayments').select('*').eq('group_id', groupId);
+    if (error) console.error('Error fetching all repayments:', error);
+    return data;
+};
+
+export const getPublicGroups = async () => {
+  if (!supabase) {
     console.error('Supabase client not initialized');
     return null;
   }
 
-  if (!userId) {
-    console.error('User ID is required to fetch notifications center data');
-    return null;
-  }
-
   try {
-    const { data, error } = await supabaseClient
-      .rpc('get_notifications_center_data', { p_user_id: userId });
+    const { data, error } = await supabase
+      .from('groups')
+      .select('id, name, description, (SELECT COUNT(*) FROM group_members WHERE group_id = groups.id) as member_count')
+      .eq('is_public', true); // Assuming an 'is_public' column in the 'groups' table
 
     if (error) {
-      console.error('Error fetching notifications center data:', error.message);
+      console.error('Error fetching public groups:', error.message);
       return null;
     }
 
     return data;
   } catch (error) {
-    console.error('Unexpected error fetching notifications center data:', error.message);
+    console.error('Unexpected error fetching public groups:', error.message);
     return null;
   }
 };
-
-export const supabase = supabaseClient;

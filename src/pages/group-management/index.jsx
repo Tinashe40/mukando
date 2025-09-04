@@ -8,7 +8,7 @@ import GroupSettingsPanel from './components/GroupSettingsPanel';
 import MemberInvitationSystem from './components/MemberInvitationSystem';
 import NotificationCenter from './components/NotificationCenter';
 import { useAuth } from '../../contexts/AuthContext';
-import { getGroupManagementData, getUserGroups } from '../../lib/supabase';
+import { getGroupManagementData, getUserGroups, inviteMember, updateGroupSettings, approveLoan, rejectLoan } from '../../lib/supabase';
 import LoadingSpinner from '../../components/ui/LoadingSpinner';
 import Select from '../../components/ui/Select';
 
@@ -45,6 +45,44 @@ const GroupManagement = () => {
     fetchManagementData();
   }, [selectedGroup]);
 
+  const handleInviteMember = async (invitationData) => {
+    const newInvitation = await inviteMember({ ...invitationData, groupId: selectedGroup });
+    if (newInvitation) {
+      setManagementData(prev => ({
+        ...prev,
+        invitations: [newInvitation, ...prev.invitations]
+      }));
+    }
+  };
+
+  const handleSettingsUpdate = async (newSettings) => {
+    const updatedGroup = await updateGroupSettings(selectedGroup, newSettings);
+    if (updatedGroup) {
+      setManagementData(prev => ({
+        ...prev,
+        settings: updatedGroup
+      }));
+    }
+  };
+
+  const handleLoanAction = async (action, loanId) => {
+    let updatedLoan;
+    if (action === 'approve') {
+      updatedLoan = await approveLoan(loanId);
+    } else if (action === 'reject') {
+      updatedLoan = await rejectLoan(loanId);
+    }
+
+    if (updatedLoan) {
+      setManagementData(prev => ({
+        ...prev,
+        loan_requests: prev.loan_requests.map(loan =>
+          loan.id === loanId ? { ...loan, status: updatedLoan.status } : loan
+        )
+      }));
+    }
+  };
+
   const renderTabContent = () => {
     if (isLoading) {
       return <LoadingSpinner />;
@@ -63,15 +101,15 @@ const GroupManagement = () => {
       case 'members':
         return <MemberManagementTable members={managementData.members || []} />;
       case 'loans':
-        return <LoanManagementSection loanRequests={managementData.loan_requests || []} />;
+        return <LoanManagementSection loanRequests={managementData.loan_requests || []} onLoanAction={handleLoanAction} />;
       case 'analytics':
         return <GroupAnalyticsPanel analyticsData={{}} />;
       case 'invitations':
-        return <MemberInvitationSystem inviteHistory={managementData.invitations || []} />;
+        return <MemberInvitationSystem inviteHistory={managementData.invitations || []} onInviteMember={handleInviteMember} />;
       case 'notifications':
         return <NotificationCenter notifications={[]} />;
       case 'settings':
-        return <GroupSettingsPanel groupSettings={managementData.settings} />;
+        return <GroupSettingsPanel groupSettings={managementData.settings} onSettingsUpdate={handleSettingsUpdate} />;
       default:
         return null;
     }

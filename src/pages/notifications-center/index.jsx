@@ -11,7 +11,7 @@ import ScheduledNotifications from './components/ScheduledNotifications';
 import IntegrationStatus from './components/IntegrationStatus';
 import BulkActions from './components/BulkActions';
 import { useAuth } from '../../contexts/AuthContext';
-import { getNotificationsCenterData } from '../../lib/supabase';
+import { getNotificationsCenterData, getNotificationSettings, updateNotificationSettings, getScheduledNotifications } from '../../lib/supabase';
 import LoadingSpinner from '../../components/ui/LoadingSpinner';
 
 const NotificationsCenter = () => {
@@ -32,13 +32,26 @@ const NotificationsCenter = () => {
     const fetchNotificationsData = async () => {
       if (user) {
         setIsLoading(true);
-        const data = await getNotificationsCenterData(user.id);
-        setNotificationsData(data);
+        const [notifications, settings, scheduled] = await Promise.all([
+          getNotificationsCenterData(user.id),
+          getNotificationSettings(user.id),
+          getScheduledNotifications(user.id),
+        ]);
+        setNotificationsData(notifications);
+        setCommunicationPreferences(settings[0]?.setting_value || {});
+        setScheduledNotifications(scheduled || []);
         setIsLoading(false);
       }
     };
     fetchNotificationsData();
   }, [user]);
+
+  const handlePreferencesChange = async (newPreferences) => {
+    if (user) {
+      await updateNotificationSettings(user.id, newPreferences);
+      setCommunicationPreferences(newPreferences);
+    }
+  };
 
   const filteredNotifications = useMemo(() => {
     if (!notificationsData) return [];
@@ -95,9 +108,9 @@ const NotificationsCenter = () => {
           </div>
         </div>
         <div className="space-y-6">
-          <CommunicationPreferences preferences={notificationsData.communication_preferences} />
+          <CommunicationPreferences preferences={communicationPreferences} onPreferencesChange={handlePreferencesChange} />
           <IntegrationStatus integrations={notificationsData.integrations} />
-          <ScheduledNotifications scheduledNotifications={[]} />
+          <ScheduledNotifications scheduledNotifications={scheduledNotifications} />
         </div>
       </div>
     );

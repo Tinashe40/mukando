@@ -42,9 +42,9 @@ LANGUAGE plpgsql
 AS $func$
 BEGIN
   INSERT INTO public.user_profiles (
-    id, 
-    email, 
-    full_name, 
+    id,
+    email,
+    full_name,
     phone_number,
     country,
     mobile_money_provider,
@@ -176,7 +176,7 @@ BEGIN
     -- Get test auth user IDs first
     SELECT ARRAY_AGG(id) INTO auth_user_ids_to_delete
     FROM auth.users
-    WHERE email IN ('admin@mukando.com', 'sarah@mukando.com', 'member@mukando.com');
+    WHERE email IN ('admin@mukando.com', 'anesu@mukando.com', 'member@mukando.com');
 
     -- Delete in dependency order (children first, then auth.users last)
     DELETE FROM public.user_profiles WHERE id = ANY(auth_user_ids_to_delete);
