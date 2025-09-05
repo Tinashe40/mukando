@@ -1,39 +1,13 @@
 import React from 'react';
 import Icon from '../../../components/AppIcon';
 import Button from '../../../components/ui/Button';
+import { cn } from '../../../utils/cn';
 
 const PaymentReminderCard = ({ reminders, onPayNow, onViewAll }) => {
-  if (!reminders || reminders?.length === 0) {
-    return (
-      <div className="bg-card border border-border rounded-lg p-6 shadow-warm">
-        <div className="text-center py-8">
-          <div className="w-12 h-12 bg-success/10 rounded-lg flex items-center justify-center mx-auto mb-4">
-            <Icon name="CheckCircle" size={24} className="text-success" />
-          </div>
-          <h3 className="text-lg font-medium text-foreground mb-2">All Caught Up!</h3>
-          <p className="text-sm text-muted-foreground">
-            No pending payments at this time
-          </p>
-        </div>
-      </div>
-    );
-  }
-
-  const urgentReminders = reminders?.filter(r => r?.daysUntilDue <= 1);
-  const upcomingReminders = reminders?.filter(r => r?.daysUntilDue > 1);
+  const hasReminders = reminders && reminders.length > 0;
 
   const formatCurrency = (amount, currency) => {
-    return new Intl.NumberFormat('en-ZW', {
-      style: 'currency',
-      currency: currency,
-      minimumFractionDigits: 2
-    })?.format(amount);
-  };
-
-  const getDueDateColor = (days) => {
-    if (days < 0) return 'text-error';
-    if (days <= 1) return 'text-warning';
-    return 'text-muted-foreground';
+    return new Intl.NumberFormat('en-US', { style: 'currency', currency }).format(amount);
   };
 
   const getDueDateText = (days) => {
@@ -43,93 +17,92 @@ const PaymentReminderCard = ({ reminders, onPayNow, onViewAll }) => {
     return `Due in ${days} days`;
   };
 
+  const getDueDateColor = (days) => {
+    if (days < 0) return 'text-red-500';
+    if (days <= 1) return 'text-yellow-500';
+    return 'text-gray-500';
+  };
+
+  if (!hasReminders) {
+    return (
+      <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 text-center">
+        <Icon name="CheckCircle" size={32} className="text-green-500 mx-auto mb-3" />
+        <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-1">All Caught Up!</h3>
+        <p className="text-sm text-gray-500 dark:text-gray-400">No pending payments at this time.</p>
+      </div>
+    );
+  }
+
+  const urgentReminders = reminders.filter(r => r.daysUntilDue <= 1);
+  const upcomingReminders = reminders.filter(r => r.daysUntilDue > 1);
+
   return (
-    <div className="bg-card border border-border rounded-lg p-6 shadow-warm">
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h3 className="text-lg font-semibold text-foreground mb-1">Payment Reminders</h3>
-          <p className="text-sm text-muted-foreground">
-            {reminders?.length} pending payment{reminders?.length !== 1 ? 's' : ''}
-          </p>
-        </div>
-        {urgentReminders?.length > 0 && (
-          <span className="px-3 py-1 bg-error text-error-foreground text-sm font-medium rounded-full">
-            {urgentReminders?.length} urgent
+    <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-lg font-bold text-gray-900 dark:text-white">Payment Reminders</h3>
+        {urgentReminders.length > 0 && (
+          <span className="px-3 py-1 bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300 text-xs font-semibold rounded-full">
+            {urgentReminders.length} Urgent
           </span>
         )}
       </div>
       <div className="space-y-4">
-        {/* Urgent Reminders */}
-        {urgentReminders?.map((reminder) => (
-          <div key={reminder?.id} className="p-4 bg-error/5 border border-error/20 rounded-lg">
-            <div className="flex items-start justify-between mb-3">
+        {urgentReminders.map((reminder) => (
+          <div key={reminder.id} className="p-4 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-900">
+            <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-error rounded-lg flex items-center justify-center">
-                  <Icon name="AlertTriangle" size={20} color="white" />
+                <div className="w-10 h-10 bg-red-500 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <Icon name="AlertTriangle" size={20} className="text-white" />
                 </div>
                 <div>
-                  <h4 className="font-medium text-foreground">{reminder?.title}</h4>
-                  <p className="text-sm text-muted-foreground">{reminder?.group}</p>
+                  <p className="font-semibold text-gray-900 dark:text-white">{reminder.title}</p>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">{reminder.group}</p>
                 </div>
               </div>
               <div className="text-right">
-                <p className="text-lg font-bold text-foreground font-data">
-                  {formatCurrency(reminder?.amount, reminder?.currency)}
-                </p>
-                <p className={`text-sm font-medium ${getDueDateColor(reminder?.daysUntilDue)}`}>
-                  {getDueDateText(reminder?.daysUntilDue)}
+                <p className="text-lg font-bold text-gray-900 dark:text-white">{formatCurrency(reminder.amount, reminder.currency)}</p>
+                <p className={cn('text-sm font-medium', getDueDateColor(reminder.daysUntilDue))}>
+                  {getDueDateText(reminder.daysUntilDue)}
                 </p>
               </div>
             </div>
             <Button
               variant="default"
-              size="sm"
               fullWidth
               onClick={() => onPayNow(reminder)}
-              iconName="CreditCard"
-              iconPosition="left"
-              iconSize={16}
+              className="mt-2"
             >
               Pay Now
             </Button>
           </div>
         ))}
 
-        {/* Upcoming Reminders */}
-        {upcomingReminders?.slice(0, 2)?.map((reminder) => (
-          <div key={reminder?.id} className="p-4 border border-border rounded-lg hover:bg-muted/50 transition-colors duration-200">
+        {upcomingReminders.slice(0, 2).map((reminder) => (
+          <div key={reminder.id} className="p-4 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-warning rounded-lg flex items-center justify-center">
-                  <Icon name="Clock" size={20} color="white" />
+                <div className="w-10 h-10 bg-yellow-100 text-yellow-600 dark:bg-yellow-900/50 dark:text-yellow-400 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <Icon name="Clock" size={20} />
                 </div>
                 <div>
-                  <h4 className="font-medium text-foreground">{reminder?.title}</h4>
-                  <p className="text-sm text-muted-foreground">{reminder?.group}</p>
+                  <p className="font-semibold text-gray-900 dark:text-white">{reminder.title}</p>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">{reminder.group}</p>
                 </div>
               </div>
               <div className="text-right">
-                <p className="text-lg font-bold text-foreground font-data">
-                  {formatCurrency(reminder?.amount, reminder?.currency)}
-                </p>
-                <p className={`text-sm font-medium ${getDueDateColor(reminder?.daysUntilDue)}`}>
-                  {getDueDateText(reminder?.daysUntilDue)}
+                <p className="text-lg font-bold text-gray-900 dark:text-white">{formatCurrency(reminder.amount, reminder.currency)}</p>
+                <p className={cn('text-sm font-medium', getDueDateColor(reminder.daysUntilDue))}>
+                  {getDueDateText(reminder.daysUntilDue)}
                 </p>
               </div>
             </div>
           </div>
         ))}
 
-        {reminders?.length > 3 && (
-          <Button
-            variant="outline"
-            fullWidth
-            onClick={onViewAll}
-            iconName="ArrowRight"
-            iconPosition="right"
-            iconSize={16}
-          >
-            View all {reminders?.length} reminders
+        {reminders.length > 3 && (
+          <Button variant="ghost" fullWidth onClick={onViewAll} className="mt-4">
+            View All ({reminders.length})
+            <Icon name="ArrowRight" size={16} className="ml-2" />
           </Button>
         )}
       </div>

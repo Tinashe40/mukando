@@ -1,6 +1,6 @@
 CREATE TABLE public.audit_logs (
     id BIGSERIAL PRIMARY KEY,
-    user_id UUID REFERENCES public.users(id) ON DELETE SET NULL,
+    user_id UUID REFERENCES auth.users(id) ON DELETE SET NULL,
     action TEXT NOT NULL,
     entity_type TEXT,
     entity_id BIGINT,

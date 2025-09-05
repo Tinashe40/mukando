@@ -1,41 +1,33 @@
 import React from 'react';
 import Icon from '../../../components/AppIcon';
 import Button from '../../../components/ui/Button';
+import { cn } from '../../../utils/cn';
 
-const QuickActionCard = ({ title, description, icon, iconColor, actionText, onAction, disabled = false, badge }) => {
+const QuickActionCard = ({ title, description, icon, onAction }) => {
+  const ICON_STYLES = {
+    PlusCircle: 'bg-blue-100 text-blue-600 dark:bg-blue-900/50 dark:text-blue-400',
+    CreditCard: 'bg-green-100 text-green-600 dark:bg-green-900/50 dark:text-green-400',
+    Users: 'bg-purple-100 text-purple-600 dark:bg-purple-900/50 dark:text-purple-400',
+    Wallet: 'bg-indigo-100 text-indigo-600 dark:bg-indigo-900/50 dark:text-indigo-400',
+  };
+
   return (
-    <div className="bg-card border border-border rounded-lg p-6 shadow-warm hover:shadow-warm-md transition-all duration-200 group">
-      <div className="flex items-start justify-between mb-4">
-        <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${iconColor} group-hover:scale-105 transition-transform duration-200`}>
-          <Icon name={icon} size={24} color="white" />
+    <div 
+      onClick={onAction}
+      className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 cursor-pointer group hover:shadow-xl hover:-translate-y-1.5 transition-all duration-300 ease-in-out"
+    >
+      <div className="flex flex-col items-start h-full">
+        <div className={cn('w-12 h-12 rounded-lg flex items-center justify-center mb-4', ICON_STYLES[icon] || 'bg-gray-100 text-gray-600')}>
+          <Icon name={icon} size={24} />
         </div>
-        {badge && (
-          <span className="px-2 py-1 bg-accent text-accent-foreground text-xs font-medium rounded-full">
-            {badge}
-          </span>
-        )}
-      </div>
-      
-      <div className="space-y-3">
-        <div>
-          <h3 className="text-lg font-semibold text-foreground mb-2">{title}</h3>
-          <p className="text-sm text-muted-foreground leading-relaxed">
-            {description}
-          </p>
+        <h3 className="text-lg font-bold text-gray-900 dark:text-white">{title}</h3>
+        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 mb-4 flex-grow">{description}</p>
+        <div className="w-full mt-auto">
+            <span className="text-sm font-semibold text-primary group-hover:underline flex items-center">
+              Proceed
+              <Icon name="ArrowRight" size={16} className="ml-1 transition-transform duration-300 group-hover:translate-x-1" />
+            </span>
         </div>
-        
-        <Button
-          variant="outline"
-          fullWidth
-          onClick={onAction}
-          disabled={disabled}
-          iconName="ArrowRight"
-          iconPosition="right"
-          iconSize={16}
-          className="group-hover:border-primary group-hover:text-primary transition-colors duration-200"
-        >
-          {actionText}
-        </Button>
       </div>
     </div>
   );

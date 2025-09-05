@@ -40,15 +40,15 @@ const UserLogin = () => {
       <div className="hidden lg:block relative">
         <div 
           className="absolute inset-0 bg-cover bg-center"
-          style={{ backgroundImage: "url('https://images.unsplash.com/photo-1597848212624-a19eb35e2651?q=80&w=1965&auto=format&fit=crop')" }}
+          style={{ backgroundImage: "url('https://img.freepik.com/free-photo/group-diverse-people-stacking-hands-together_53876-64956.jpg?w=1380&t=st=1725541396~exp=1725541996~hmac=3c4d6f969f9f95501a99734639579a79d799c4ab9a3e1e4a5c5de355d639409e')" }}
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
         <div className="relative h-full flex flex-col justify-end p-12 text-white">
           <h2 className="text-4xl font-bold leading-tight mb-4">
-            Empowering Communities, One Saving at a Time.
+            Welcome Back to Mukando.
           </h2>
           <p className="text-lg text-white/80">
-            Join thousands of users who are building a brighter financial future with Mukando.
+            Your community is waiting. Let's continue building your financial future, together.
           </p>
         </div>
       </div>

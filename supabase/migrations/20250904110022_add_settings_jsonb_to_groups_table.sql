@@ -1,16 +1,17 @@
+-- Add the settings column if it doesn't exist
 ALTER TABLE public.groups
-ADD COLUMN settings JSONB NOT NULL DEFAULT '{}'::JSONB;
+ADD COLUMN IF NOT EXISTS settings JSONB NOT NULL DEFAULT '{}'::JSONB;
 
--- Migrate existing settings to the new JSONB column (optional, but good for existing data)
+-- Only migrate data if the settings column is empty (contains only default empty JSON)
 UPDATE public.groups
 SET settings = jsonb_build_object(
     'general', jsonb_build_object(
         'groupName', name,
         'description', description,
-        'currency', 'USD', -- Default or infer from existing data
-        'maxMembers', 100, -- Default or infer
-        'allowInvitations', true, -- Default or infer
-        'requireApproval', true -- Default or infer
+        'currency', 'USD',
+        'maxMembers', 100,
+        'allowInvitations', true,
+        'requireApproval', true
     ),
     'contributions', jsonb_build_object(
         'minimumAmount', 0,
@@ -50,9 +51,8 @@ SET settings = jsonb_build_object(
         'largeTransactionThreshold', 1000,
         'sessionTimeout', 60
     )
-);
+)
+WHERE settings = '{}'::jsonb; -- Only update if settings is empty
 
--- Remove old columns (optional, after data migration is confirmed)
--- ALTER TABLE public.groups DROP COLUMN name;
--- ALTER TABLE public.groups DROP COLUMN description;
--- ... and so on for other settings columns
+-- Note: Don't drop the name and description columns yet as they might still be needed
+-- by your application. Consider a phased approach to removing these columns.

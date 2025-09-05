@@ -148,18 +148,30 @@ export const getFinancialOverview = async (userId) => {
 };
 
 export const getRecentActivity = async (userId) => {
-    // This is a guess. There is no specific migration for this.
-    // I will assume it gets the last 5 contributions and loans for the user.
-    const { data, error } = await supabase
+    const { data: contributions, error: contributionsError } = await supabase
         .from('contributions')
-        .select('*')
-        .eq('user_id', userId)
-        .order('created_at', { ascending: false })
-        .limit(5);
-    if (error) {
-      console.error('Error fetching recent activity:', error);
+        .select('id, amount, created_at, \'\' as type, \'Contribution\' as title, \'Money added to your savings\' as description')
+        .eq('user_id', userId);
+
+    const { data: loanRepayments, error: loanRepaymentsError } = await supabase
+        .from('loan_repayments')
+        .select('id, amount, repayment_date as created_at, \'\' as type, \'Loan Repayment\' as title, \'Payment made towards your loan\' as description')
+        .eq('user_id', userId);
+
+    if (contributionsError) {
+        console.error('Error fetching contributions:', contributionsError);
+        return [];
     }
-    return data;
+    if (loanRepaymentsError) {
+        console.error('Error fetching loan repayments:', loanRepaymentsError);
+        return [];
+    }
+
+    const combinedActivity = [...contributions, ...loanRepayments];
+
+    combinedActivity.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
+    return combinedActivity.slice(0, 5);
 };
 
 // Notifications center
@@ -206,7 +218,7 @@ export const getPaymentProcessingData = async (groupId) => {
 
 // Record contribution
 export const getUsers = async () => {
-    const { data, error } = await supabase.from('users').select('id, username');
+    const { data, error } = await supabase.from('auth.users').select('id');
     if (error) {
       console.error('Error fetching users:', error);
     }
