@@ -1,47 +1,70 @@
 import React from 'react';
-import { BrowserRouter, Route, Routes as RouterRoutes, Navigate } from 'react-router-dom';
-import ErrorBoundary from './components/ErrorBoundary';
-import ScrollToTop from './components/ScrollToTop';
+import { BrowserRouter, Routes as RouterRoutes, Route, Navigate } from 'react-router-dom';
 import AppLayout from './components/AppLayout';
 import AuthLayout from './components/AuthLayout';
 import withAuthorization from './components/withAuthorization';
+import AuthCallback from './pages/AuthCallback';
 import NotFound from './pages/NotFound';
 import Unauthorized from './pages/Unauthorized';
 import UserLogin from './pages/user-login';
 import UserRegistration from './pages/user-registration';
-import AuthCallback from './pages/AuthCallback';
-import MemberDashboard from './pages/member-dashboard';
+import AdminDashboard from './pages/admin-dashboard';
+import AuditLog from './pages/audit-log';
+import ContributionHistory from './pages/contribution-history';
 import GroupAnalytics from './pages/group-analytics';
+import GroupCreation from './pages/group-creation';
 import GroupManagement from './pages/group-management';
 import LoanRequest from './pages/loan-request';
+import MemberDashboard from './pages/member-dashboard';
 import NotificationsCenter from './pages/notifications-center';
 import PaymentProcessing from './pages/payment-processing';
-import CreateGroup from './pages/group-creation';
-import ContributionHistory from './pages/contribution-history';
+import PublicGroups from './pages/public-groups';
 import RecordContribution from './pages/record-contribution';
 import RecordRepayment from './pages/record-repayment';
 import RepaymentHistory from './pages/repayment-history';
 import ReportGeneration from './pages/report-generation';
-import AuditLog from './pages/audit-log';
-import AdminDashboard from './pages/admin-dashboard';
-import PublicGroups from './pages/public-groups';
+import TermsOfService from './pages/TermsOfService';
+import PrivacyPolicy from './pages/PrivacyPolicy';
+import ErrorBoundary from './components/ErrorBoundary';
+import ScrollToTop from './components/ScrollToTop';
 import { useAuth } from './contexts/AuthContext';
+
+const AuthorizedAdminDashboard = withAuthorization(['admin'])(AdminDashboard);
+const AuthorizedAuditLog = withAuthorization(['admin'])(AuditLog);
+const AuthorizedContributionHistory = withAuthorization(['member', 'admin'])(ContributionHistory);
+const AuthorizedGroupAnalytics = withAuthorization(['admin'])(GroupAnalytics);
+const AuthorizedGroupCreation = withAuthorization(['member', 'admin'])(GroupCreation);
+const AuthorizedGroupManagement = withAuthorization(['admin'])(GroupManagement);
+const AuthorizedLoanRequest = withAuthorization(['member', 'admin'])(LoanRequest);
+const AuthorizedMemberDashboard = withAuthorization(['member', 'admin'])(MemberDashboard);
+const AuthorizedNotificationsCenter = withAuthorization(['member', 'admin'])(NotificationsCenter);
+const AuthorizedPaymentProcessing = withAuthorization(['member', 'admin'])(PaymentProcessing);
+const AuthorizedRecordContribution = withAuthorization(['member', 'admin'])(RecordContribution);
+const AuthorizedRecordRepayment = withAuthorization(['member', 'admin'])(RecordRepayment);
+const AuthorizedRepaymentHistory = withAuthorization(['member', 'admin'])(RepaymentHistory);
+const AuthorizedReportGeneration = withAuthorization(['admin'])(ReportGeneration);
 
 const AuthenticatedRoute = ({ children }) => {
   const { isAuthenticated } = useAuth();
   return isAuthenticated ? children : <Navigate to="/auth/login" />;
 };
 
-const AnalyticsPage = withAuthorization(GroupAnalytics, ['admin', 'treasurer']);
-const ManagementPage = withAuthorization(GroupManagement, ['admin']);
-
-const Routes = () => {
+function AppRoutes() {
   return (
     <BrowserRouter>
       <ErrorBoundary>
         <ScrollToTop />
         <RouterRoutes>
-          <Route path="/" element={<Navigate to="/dashboard" />} />
+          {/* Root path redirect */}
+          <Route path="/" element={<Navigate to="/auth/login" replace />} />
+
+          {/* Authentication Routes */}
+          <Route path="/auth" element={<AuthLayout />}>
+            <Route index element={<Navigate to="login" />} />
+            <Route path="login" element={<UserLogin />} />
+            <Route path="register" element={<UserRegistration />} />
+            <Route path="callback" element={<AuthCallback />} />
+          </Route>
 
           {/* Authenticated Routes */}
           <Route
@@ -52,30 +75,26 @@ const Routes = () => {
               </AuthenticatedRoute>
             }
           >
-            <Route path="dashboard" element={<MemberDashboard />} />
-            <Route path="analytics" element={<AnalyticsPage />} />
-            <Route path="management" element={<ManagementPage />} />
-            <Route path="loans" element={<LoanRequest />} />
-            <Route path="notifications" element={<NotificationsCenter />} />
-            <Route path="payments" element={<PaymentProcessing />} />
-            <Route path="groups/create" element={<CreateGroup />} />
-            <Route path="contributions" element={<ContributionHistory />} />
-            <Route path="contributions/record" element={withAuthorization(RecordContribution, ['admin', 'treasurer'])} />
-            <Route path="loans/repay" element={<RecordRepayment />} />
-            <Route path="loans/repayments" element={withAuthorization(RepaymentHistory, ['admin', 'treasurer'])} />
-            <Route path="reports" element={withAuthorization(ReportGeneration, ['admin', 'treasurer'])} />
-            <Route path="audit-log" element={withAuthorization(AuditLog, ['admin', 'superadmin'])} />
-            <Route path="admin-dashboard" element={withAuthorization(AdminDashboard, ['admin', 'superadmin'])} />
-            <Route path="public-groups" element={<PublicGroups />} />
+            <Route path="member-dashboard" element={<AuthorizedMemberDashboard />} />
+            <Route path="admin-dashboard" element={<AuthorizedAdminDashboard />} />
+            <Route path="audit-log" element={<AuthorizedAuditLog />} />
+            <Route path="contribution-history" element={<AuthorizedContributionHistory />} />
+            <Route path="group-analytics" element={<AuthorizedGroupAnalytics />} />
+            <Route path="group-creation" element={<AuthorizedGroupCreation />} />
+            <Route path="group-management" element={<AuthorizedGroupManagement />} />
+            <Route path="loan-request" element={<AuthorizedLoanRequest />} />
+            <Route path="notifications-center" element={<AuthorizedNotificationsCenter />} />
+            <Route path="payment-processing" element={<AuthorizedPaymentProcessing />} />
+            <Route path="record-contribution" element={<AuthorizedRecordContribution />} />
+            <Route path="record-repayment" element={<AuthorizedRecordRepayment />} />
+            <Route path="repayment-history" element={<AuthorizedRepaymentHistory />} />
+            <Route path="report-generation" element={<AuthorizedReportGeneration />} />
           </Route>
 
-          {/* Authentication Routes */}
-          <Route path="/auth" element={<AuthLayout />}>
-            <Route index element={<Navigate to="login" />} />
-            <Route path="login" element={<UserLogin />} />
-            <Route path="register" element={<UserRegistration />} />
-            <Route path="callback" element={<AuthCallback />} />
-          </Route>
+          {/* Public Routes */}
+          <Route path="/public-groups" element={<PublicGroups />} />
+          <Route path="/terms" element={<TermsOfService />} />
+          <Route path="/privacy" element={<PrivacyPolicy />} />
 
           {/* Other Routes */}
           <Route path="/unauthorized" element={<Unauthorized />} />
@@ -84,6 +103,6 @@ const Routes = () => {
       </ErrorBoundary>
     </BrowserRouter>
   );
-};
+}
 
-export default Routes;
+export default AppRoutes;

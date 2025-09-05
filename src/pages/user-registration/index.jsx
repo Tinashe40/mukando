@@ -1,165 +1,58 @@
-import { useEffect, useState } from 'react';
-import { Helmet } from 'react-helmet';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import Icon from '../../components/AppIcon';
 import RegistrationForm from './components/RegistrationForm';
-import RegistrationHeader from './components/RegistrationHeader';
-import TrustSignals from './components/TrustSignals';
-// import LoadingSpinner from '../../../components/ui/LoadingSpinner';
-import LoadingSpinner from '../../components/ui/LoadingSpinner';
-
 
 const UserRegistration = () => {
-  const [currentLanguage, setCurrentLanguage] = useState('en');
-  const [registrationStatus, setRegistrationStatus] = useState({
-    loading: false,
-    success: false,
-    error: null
-  });
   const navigate = useNavigate();
 
-  useEffect(() => {
-    // Check localStorage for saved language preference
-    const savedLanguage = localStorage.getItem('mukando_language') || 'en';
-    setCurrentLanguage(savedLanguage);
-  }, []);
+  return (
+    <div className="min-h-screen w-full grid grid-cols-1 lg:grid-cols-2">
+      {/* Left Column: Registration Form */}
+      <div className="flex flex-col items-center justify-center p-8 lg:p-12 bg-card">
+        <div className="w-full max-w-md">
+          {/* Logo and Header */}
+          <div className="flex items-center gap-3 mb-8">
+            <div className="w-12 h-12 bg-primary rounded-xl flex items-center justify-center shadow-warm">
+              <Icon name="Coins" size={28} color="white" />
+            </div>
+            <div className="text-left">
+              <h1 className="text-2xl font-bold text-foreground font-heading">Mukando</h1>
+              <p className="text-sm text-muted-foreground">Community Savings Platform</p>
+            </div>
+          </div>
 
-  const handleRegistrationSuccess = () => {
-    setRegistrationStatus({ loading: false, success: true, error: null });
-    
-    // Redirect to login after a short delay
-    setTimeout(() => {
-      navigate('/user-login', { 
-        state: { 
-          message: 'Registration successful! Please check your email to verify your account.',
-          registrationSuccess: true
-        } 
-      });
-    }, 2000);
-  };
+          {/* Registration Form */}
+          <RegistrationForm />
 
-  const handleRegistrationError = (error) => {
-    setRegistrationStatus({ loading: false, success: false, error });
-  };
-
-  const handleRegistrationStart = () => {
-    setRegistrationStatus({ loading: true, success: false, error: null });
-  };
-
-  if (registrationStatus.loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="text-center">
-          <LoadingSpinner size="lg" />
-          <h2 className="mt-4 text-xl font-semibold text-foreground">Creating your account...</h2>
-          <p className="text-muted-foreground">This will just take a moment</p>
+          {/* Footer Links */}
+          <div className="mt-8 text-center text-sm text-muted-foreground">
+            <p>&copy; {new Date().getFullYear()} Mukando. All rights reserved.</p>
+            <div className="mt-2 space-x-4">
+              <a href="/terms" className="hover:text-primary">Terms of Service</a>
+              <a href="/privacy" className="hover:text-primary">Privacy Policy</a>
+            </div>
+          </div>
         </div>
       </div>
-    );
-  }
 
-  if (registrationStatus.success) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="text-center max-w-md p-6 bg-card rounded-lg border border-border shadow-warm">
-          <div className="w-16 h-16 bg-success/10 rounded-full flex items-center justify-center mx-auto mb-4">
-            <svg className="w-8 h-8 text-success" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-            </svg>
-          </div>
-          <h2 className="text-2xl font-semibold text-foreground mb-2">Registration Successful!</h2>
-          <p className="text-muted-foreground mb-6">
-            Your account has been created successfully. Redirecting you to login...
+      {/* Right Column: Branding and Image */}
+      <div className="hidden lg:block relative">
+        <div 
+          className="absolute inset-0 bg-cover bg-center"
+          style={{ backgroundImage: "url('https://images.unsplash.com/photo-1604328698692-63c218d4b35a?q=80&w=1974&auto=format&fit=crop')" }}
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+        <div className="relative h-full flex flex-col justify-end p-12 text-white">
+          <h2 className="text-4xl font-bold leading-tight mb-4">
+            Join a Community of Savers and Builders.
+          </h2>
+          <p className="text-lg text-white/80">
+            Create your account and start your journey towards financial empowerment with Mukando.
           </p>
         </div>
       </div>
-    );
-  }
-
-  return (
-    <>
-      <Helmet>
-        <title>Join Mukando - Community Savings Platform | Register Now</title>
-        <meta 
-          name="description" 
-          content="Create your Mukando account and join thousands of Africans building wealth through community savings groups. Secure, transparent, and culturally rooted digital finance." 
-        />
-        <meta name="keywords" content="mukando, community savings, african finance, digital savings groups, microfinance, zimbabwe" />
-        <meta property="og:title" content="Join Mukando - Community Savings Platform" />
-        <meta property="og:description" content="Start your journey with Africa's leading community savings platform" />
-        <meta property="og:type" content="website" />
-        <link rel="canonical" href="/user-registration" />
-      </Helmet>
-      
-      <div className="min-h-screen bg-background">
-        {/* Main Content */}
-        <div className="container mx-auto px-4 py-8">
-          <div className="max-w-6xl mx-auto">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-start">
-              {/* Left Column - Registration Form */}
-              <div className="order-2 lg:order-1">
-                <div className="bg-card rounded-2xl p-6 lg:p-8 border border-border shadow-warm-lg">
-                  {/* Header Section */}
-                  <div className="mb-8">
-                    <RegistrationHeader />
-                  </div>
-
-                  {/* Registration Form */}
-                  <div className="space-y-6">
-                    <RegistrationForm 
-                      onRegistrationStart={handleRegistrationStart}
-                      onRegistrationSuccess={handleRegistrationSuccess}
-                      onRegistrationError={handleRegistrationError}
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Right Column - Trust Signals */}
-              <div className="order-1 lg:order-2">
-                <div className="lg:sticky lg:top-8">
-                  <TrustSignals />
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Footer */}
-        <footer className="border-t border-border bg-card mt-16">
-          <div className="container mx-auto px-4 py-8">
-            <div className="text-center space-y-4">
-              <div className="flex items-center justify-center gap-6 text-sm text-muted-foreground">
-                <a href="/privacy" className="hover:text-foreground transition-colors">
-                  Privacy Policy
-                </a>
-                <a href="/terms" className="hover:text-foreground transition-colors">
-                  Terms of Service
-                </a>
-                <a href="/support" className="hover:text-foreground transition-colors">
-                  Support
-                </a>
-                <a href="/about" className="hover:text-foreground transition-colors">
-                  About Us
-                </a>
-              </div>
-              <div className="text-sm text-muted-foreground">
-                <p>
-                  © {new Date().getFullYear()} Mukando. All rights reserved. 
-                  Empowering African communities through digital savings.
-                </p>
-              </div>
-              <div className="flex items-center justify-center gap-4 text-xs text-muted-foreground">
-                <span>🇿🇼 Made in Zimbabwe</span>
-                <span>•</span>
-                <span>🔒 Bank-level Security</span>
-                <span>•</span>
-                <span>📱 Mobile Optimized</span>
-              </div>
-            </div>
-          </div>
-        </footer>
-      </div>
-    </>
+    </div>
   );
 };
 

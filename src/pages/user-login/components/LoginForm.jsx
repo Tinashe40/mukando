@@ -32,8 +32,10 @@ const LoginForm = () => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     const phoneRegex = /^(\+263|0)[0-9]{9}$/;
     
-    if (emailRegex?.test(value)) return 'email';
-    if (phoneRegex?.test(value)) return 'phone';
+    if (emailRegex?.test(value))
+      return 'email';
+    if (phoneRegex?.test(value))
+      return 'phone';
     return 'unknown';
   };
 
@@ -246,7 +248,7 @@ const LoginForm = () => {
             </h4>
             <div className="space-y-1 text-sm text-gray-600">
               <p><strong>Admin:</strong> admin@mukando.com / admin123</p>
-              <p><strong>Member:</strong> anesu@mukando.com / member123</p>
+              <p><strong>Member:</strong> member@mukando.com / member123</p>
             </div>
           </div>
 
