@@ -40,7 +40,12 @@ RETURNS TRIGGER
 SECURITY DEFINER
 LANGUAGE plpgsql
 AS $func$
+DECLARE
+  role_id BIGINT;
 BEGIN
+  -- Get the role_id from the roles table based on the role name provided in the raw_user_meta_data
+  SELECT id INTO role_id FROM public.roles WHERE name = COALESCE(NEW.raw_user_meta_data->>'role', 'member');
+
   INSERT INTO public.user_profiles (
     id,
     email,
@@ -48,7 +53,7 @@ BEGIN
     phone_number,
     country,
     mobile_money_provider,
-    role
+    role_id
   )
   VALUES (
     NEW.id,
@@ -57,7 +62,7 @@ BEGIN
     NEW.raw_user_meta_data->>'phone_number',
     COALESCE((NEW.raw_user_meta_data->>'country')::public.country_code, 'ZW'::public.country_code),
     (NEW.raw_user_meta_data->>'mobile_money_provider')::public.mobile_money_provider,
-    COALESCE((NEW.raw_user_meta_data->>'role')::public.user_role, 'member'::public.user_role)
+    role_id
   );
   RETURN NEW;
 END;
@@ -74,7 +79,7 @@ BEGIN
   SET 
     last_login_at = CURRENT_TIMESTAMP,
     updated_at = CURRENT_TIMESTAMP
-  WHERE id = NEW.user_id;
+  WHERE id = NEW.id;
   RETURN NEW;
 END;
 $func$;
@@ -93,8 +98,8 @@ $func$;
 -- 5. Enable RLS
 ALTER TABLE public.user_profiles ENABLE ROW LEVEL SECURITY;
 
--- 6. RLS Policies (Using Pattern 1 - Core User Tables)
--- Pattern 1: Core user table (user_profiles) - Simple only, no functions
+-- 6. RLS Policies (Using Pattern 2 - RBAC with Permissions)
+-- Pattern 2: RBAC with permissions
 CREATE POLICY "users_manage_own_user_profiles"
 ON public.user_profiles
 FOR ALL
@@ -107,7 +112,12 @@ CREATE POLICY "users_can_view_public_profiles"
 ON public.user_profiles
 FOR SELECT
 TO authenticated
-USING (account_status = 'active'::public.account_status);
+USING (EXISTS (
+  SELECT 1
+  FROM public.role_permissions rp
+  JOIN public.user_profiles up ON rp.role_id = up.role_id
+  WHERE up.id = auth.uid() AND rp.permission_id = (SELECT id FROM public.permissions WHERE name = 'users:read')
+));
 
 -- 7. Triggers
 CREATE TRIGGER on_auth_user_created
@@ -123,7 +133,7 @@ CREATE TRIGGER handle_updated_at_user_profiles
   FOR EACH ROW EXECUTE FUNCTION public.handle_updated_at();
 
 -- 8. Mock Data for Testing
-DO $$
+DO $
 DECLARE
     admin_uuid UUID := gen_random_uuid();
     sarah_uuid UUID := gen_random_uuid();
@@ -162,7 +172,7 @@ EXCEPTION
         RAISE NOTICE 'Unique constraint error: %', SQLERRM;
     WHEN OTHERS THEN
         RAISE NOTICE 'Unexpected error: %', SQLERRM;
-END $$;
+END $;
 
 -- 9. Cleanup function for development/testing
 CREATE OR REPLACE FUNCTION public.cleanup_test_users()

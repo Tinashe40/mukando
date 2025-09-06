@@ -4,19 +4,35 @@ import { createClient } from '@supabase/supabase-js';
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
+if (!supabaseUrl || !supabaseAnonKey) {
+  throw new Error('Missing Supabase environment variables');
+}
+
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 // Authentication functions
 export const getUserProfile = async (userId) => {
-  const { data, error } = await supabase.from('profiles').select('*').eq('id', userId).single();
-  if (error) {
-    console.error('Error fetching user profile:', error);
+  try {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', userId)
+      .single();
+    
+    if (error) {
+      console.error('Error fetching user profile:', error);
+      return null;
+    }
+    
+    return data;
+  } catch (error) {
+    console.error('Exception fetching user profile:', error);
+    return null;
   }
-  return data;
 };
 
 export const getUserPermissions = async (userId) => {
-  const { data, error } = await supabase.rpc('get_user_permissions', { p_user_id: userId });
+  const { data, error } = await supabase.rpc('get_user_permissions_new', { p_user_id: userId });
   if (error) {
     console.error('Error fetching user permissions:', error);
 }

@@ -54,17 +54,26 @@ const RegistrationForm = ({ onRegistrationStart, onRegistrationSuccess, onRegist
     KE: [
       { value: 'mpesa', label: 'M-Pesa' },
       { value: 'airtel', label: 'Airtel Money' }
+    ],
+    default: [
+      { value: 'other', label: 'Other Provider' }
     ]
   };
 
   const calculatePasswordStrength = (password) => {
     let strength = 0;
-    if (password.length >= 8) strength += 25;
-    if (/[a-z]/.test(password)) strength += 25;
-    if (/[A-Z]/.test(password)) strength += 25;
-    if (/[0-9]/.test(password)) strength += 25;
-    if (/[^A-Za-z0-9]/.test(password)) strength += 25;
+    if (password.length >= 8) strength += 20;
+    if (/[a-z]/.test(password)) strength += 20;
+    if (/[A-Z]/.test(password)) strength += 20;
+    if (/[0-9]/.test(password)) strength += 20;
+    if (/[^A-Za-z0-9]/.test(password)) strength += 20;
     return Math.min(strength, 100);
+  };
+
+  const validatePhoneNumber = (phone) => {
+    // Basic international phone validation
+    const phoneRegex = /^\+?[1-9]\d{1,14}$/;
+    return phoneRegex.test(phone.replace(/\s/g, ''));
   };
 
   const handleInputChange = (field, value) => {
@@ -101,8 +110,8 @@ const RegistrationForm = ({ onRegistrationStart, onRegistrationSuccess, onRegist
     
     if (!formData.phoneNumber.trim()) {
       newErrors.phoneNumber = 'Phone number is required';
-    } else if (!/^\+?[1-9]\d{1,14}$/.test(formData.phoneNumber.replace(/\s/g, ''))) {
-      newErrors.phoneNumber = 'Please enter a valid phone number with country code';
+    } else if (!validatePhoneNumber(formData.phoneNumber)) {
+      newErrors.phoneNumber = 'Please enter a valid phone number with country code (e.g., +263771234567)';
     }
     
     if (!formData.password) {
@@ -135,15 +144,15 @@ const RegistrationForm = ({ onRegistrationStart, onRegistrationSuccess, onRegist
     }
     
     setIsLoading(true);
-    onRegistrationStart();
+    onRegistrationStart && onRegistrationStart();
     
     try {
       const result = await register(formData);
       
       if (result.success) {
-        onRegistrationSuccess();
+        onRegistrationSuccess && onRegistrationSuccess();
       } else {
-        onRegistrationError(result.error || 'Registration failed. Please try again.');
+        onRegistrationError && onRegistrationError(result.error || 'Registration failed. Please try again.');
       }
     } catch (error) {
       console.error('Registration failed:', error);
@@ -156,7 +165,7 @@ const RegistrationForm = ({ onRegistrationStart, onRegistrationSuccess, onRegist
       }
       
       setErrors({ submit: errorMessage });
-      onRegistrationError(errorMessage);
+      onRegistrationError && onRegistrationError(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -175,6 +184,10 @@ const RegistrationForm = ({ onRegistrationStart, onRegistrationSuccess, onRegist
     if (passwordStrength < 75) return 'Good';
     if (passwordStrength < 90) return 'Strong';
     return 'Very Strong';
+  };
+
+  const getProvidersForCountry = () => {
+    return mobileMoneyOptions[formData.country] || mobileMoneyOptions.default;
   };
 
   return (
@@ -219,7 +232,7 @@ const RegistrationForm = ({ onRegistrationStart, onRegistrationSuccess, onRegist
             type="tel"
             placeholder="+263 77 123 4567"
             value={formData.phoneNumber}
-            onChange={(e) => handleInputChange('phoneNumber', e.target.value)}
+            onChange={(e) => handleInputChange('phoneNumber', e.target.value.replace(/\s/g, ''))}
             error={errors.phoneNumber}
             description="Include country code (e.g., +263 for Zimbabwe)"
             required
@@ -235,16 +248,14 @@ const RegistrationForm = ({ onRegistrationStart, onRegistrationSuccess, onRegist
               required
             />
 
-            {mobileMoneyOptions[formData.country] && (
-              <Select
-                label="Mobile Money Provider"
-                options={mobileMoneyOptions[formData.country]}
-                value={formData.mobileMoneyProvider}
-                onChange={(value) => handleInputChange('mobileMoneyProvider', value)}
-                placeholder="Select provider"
-                description="For USD payments and withdrawals"
-              />
-            )}
+            <Select
+              label="Mobile Money Provider"
+              options={getProvidersForCountry()}
+              value={formData.mobileMoneyProvider}
+              onChange={(value) => handleInputChange('mobileMoneyProvider', value)}
+              placeholder="Select provider"
+              description="For USD payments and withdrawals"
+            />
           </div>
 
           {/* Password */}
@@ -318,11 +329,11 @@ const RegistrationForm = ({ onRegistrationStart, onRegistrationSuccess, onRegist
               label={
                 <span>
                   I agree to the{' '}
-                  <a href="/terms" className="text-primary hover:underline">
+                  <a href="/terms" className="text-primary hover:underline" target="_blank" rel="noopener noreferrer">
                     Terms and Conditions
                   </a>{' '}
                   and{' '}
-                  <a href="/privacy" className="text-primary hover:underline">
+                  <a href="/privacy" className="text-primary hover:underline" target="_blank" rel="noopener noreferrer">
                     Privacy Policy
                   </a>
                 </span>
@@ -357,6 +368,7 @@ const RegistrationForm = ({ onRegistrationStart, onRegistrationSuccess, onRegist
             size="lg"
             fullWidth
             loading={isLoading}
+            disabled={isLoading}
             iconName="UserPlus"
             iconPosition="left"
           >
@@ -369,8 +381,9 @@ const RegistrationForm = ({ onRegistrationStart, onRegistrationSuccess, onRegist
               Already have an account?{' '}
               <button
                 type="button"
-                onClick={() => navigate('/user-login')}
+                onClick={() => navigate('/auth/login')}
                 className="font-semibold text-primary hover:text-primary/80 transition-colors"
+                disabled={isLoading}
               >
                 Sign in here
               </button>

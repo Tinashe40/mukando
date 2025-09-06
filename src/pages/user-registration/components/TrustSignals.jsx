@@ -43,15 +43,6 @@ const TrustSignals = () => {
       quote: `The transparency and ease of use is amazing. Our group has grown from 8 to 30 members since we started using Mukando.`,
       rating: 5,
       groupSize: '30 members'
-    },
-    {
-      id: 3,
-      name: 'Samuel Chikweche',
-      location: 'Mutare, Zimbabwe',
-      avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face',
-      quote: `As a group administrator, Mukando makes managing contributions and loans so much easier. Highly recommended!`,
-      rating: 5,
-      groupSize: '18 members'
     }
   ];
 
@@ -93,19 +84,20 @@ const TrustSignals = () => {
           <h3 className="text-lg font-semibold text-foreground">Why Choose Mukando?</h3>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {securityFeatures?.map((feature, index) => (
+          {securityFeatures.map((feature, index) => (
             <div key={index} className="flex items-start gap-3">
               <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0">
-                <Icon name={feature?.icon} size={16} className="text-primary" />
+                <Icon name={feature.icon} size={16} className="text-primary" />
               </div>
               <div>
-                <h4 className="font-medium text-foreground text-sm">{feature?.title}</h4>
-                <p className="text-xs text-muted-foreground mt-1">{feature?.description}</p>
+                <h4 className="font-medium text-foreground text-sm">{feature.title}</h4>
+                <p className="text-xs text-muted-foreground mt-1">{feature.description}</p>
               </div>
             </div>
           ))}
         </div>
       </div>
+      
       {/* Community Testimonials */}
       <div className="bg-card rounded-xl p-6 border border-border shadow-warm">
         <div className="flex items-center gap-2 mb-4">
@@ -113,31 +105,35 @@ const TrustSignals = () => {
           <h3 className="text-lg font-semibold text-foreground">Trusted by Communities</h3>
         </div>
         <div className="space-y-4">
-          {testimonials?.slice(0, 2)?.map((testimonial) => (
-            <div key={testimonial?.id} className="border-l-4 border-primary pl-4">
+          {testimonials.map((testimonial) => (
+            <div key={testimonial.id} className="border-l-4 border-primary pl-4">
               <div className="flex items-start gap-3">
-                <Image
-                  src={testimonial?.avatar}
-                  alt={testimonial?.name}
-                  className="w-10 h-10 rounded-full object-cover flex-shrink-0"
-                />
+                <div className="w-10 h-10 overflow-hidden rounded-full flex-shrink-0 bg-muted">
+                  <Image
+                    src={testimonial.avatar}
+                    alt={testimonial.name}
+                    className="w-full h-full object-cover"
+                    fallback={<Icon name="User" size={20} className="text-muted-foreground m-2" />}
+                  />
+                </div>
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-1">
-                    <h4 className="font-medium text-foreground text-sm">{testimonial?.name}</h4>
+                    <h4 className="font-medium text-foreground text-sm">{testimonial.name}</h4>
                     <div className="flex items-center gap-1">
-                      {renderStars(testimonial?.rating)}
+                      {renderStars(testimonial.rating)}
                     </div>
                   </div>
                   <p className="text-xs text-muted-foreground mb-2">
-                    {testimonial?.location} • {testimonial?.groupSize}
+                    {testimonial.location} • {testimonial.groupSize}
                   </p>
-                  <p className="text-sm text-foreground italic">"{testimonial?.quote}"</p>
+                  <p className="text-sm text-foreground italic">"{testimonial.quote}"</p>
                 </div>
               </div>
             </div>
           ))}
         </div>
       </div>
+      
       {/* Compliance Badges */}
       <div className="bg-card rounded-xl p-6 border border-border shadow-warm">
         <div className="flex items-center gap-2 mb-4">
@@ -145,19 +141,20 @@ const TrustSignals = () => {
           <h3 className="text-lg font-semibold text-foreground">Regulatory Compliance</h3>
         </div>
         <div className="grid grid-cols-1 gap-3">
-          {complianceBadges?.map((badge, index) => (
+          {complianceBadges.map((badge, index) => (
             <div key={index} className="flex items-center gap-3 p-3 bg-muted rounded-lg">
               <div className="w-8 h-8 bg-success/10 rounded-lg flex items-center justify-center">
-                <Icon name={badge?.icon} size={16} className="text-success" />
+                <Icon name={badge.icon} size={16} className="text-success" />
               </div>
               <div>
-                <h4 className="font-medium text-foreground text-sm">{badge?.name}</h4>
-                <p className="text-xs text-muted-foreground">{badge?.description}</p>
+                <h4 className="font-medium text-foreground text-sm">{badge.name}</h4>
+                <p className="text-xs text-muted-foreground">{badge.description}</p>
               </div>
             </div>
           ))}
         </div>
       </div>
+      
       {/* Cultural Elements */}
       <div className="bg-gradient-to-r from-primary/5 to-secondary/5 rounded-xl p-6 border border-border">
         <div className="text-center">

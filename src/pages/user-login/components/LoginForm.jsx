@@ -21,74 +21,53 @@ const LoginForm = () => {
   const [errors, setErrors] = useState({});
   const [successMessage, setSuccessMessage] = useState(location?.state?.message || '');
 
-  // Mock credentials for different user types
-  const mockCredentials = {
-    member: { email: 'anesu@mukando.com', password: 'member123' },
-    admin: { email: 'admin@mukando.com', password: 'admin123' },
-    moderator: { email: 'mod@mukando.com', password: 'mod123' }
-  };
-
-  const detectInputType = (value) => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    const phoneRegex = /^(\+263|0)[0-9]{9}$/;
-    
-    if (emailRegex?.test(value))
-      return 'email';
-    if (phoneRegex?.test(value))
-      return 'phone';
-    return 'unknown';
-  };
-
   const validateForm = () => {
     const newErrors = {};
     
-    if (!formData?.emailOrPhone?.trim()) {
+    if (!formData.emailOrPhone.trim()) {
       newErrors.emailOrPhone = 'Email or phone number is required';
-    } else {
-      const inputType = detectInputType(formData?.emailOrPhone);
-      if (inputType === 'unknown') {
-        newErrors.emailOrPhone = 'Please enter a valid email address or phone number';
-      }
     }
     
-    if (!formData?.password) {
+    if (!formData.password) {
       newErrors.password = 'Password is required';
-    } else if (formData?.password?.length < 6) {
+    } else if (formData.password.length < 6) {
       newErrors.password = 'Password must be at least 6 characters';
     }
     
     setErrors(newErrors);
-    return Object.keys(newErrors)?.length === 0;
+    return Object.keys(newErrors).length === 0;
   };
 
   const handleInputChange = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }));
-    if (errors?.[field]) {
+    if (errors[field]) {
       setErrors(prev => ({ ...prev, [field]: '' }));
     }
-    // Clear success message when user starts typing
     if (successMessage) {
       setSuccessMessage('');
     }
   };
 
   const handleSubmit = async (e) => {
-    e?.preventDefault();
+    e.preventDefault();
     
     if (!validateForm()) return;
     
     setIsLoading(true);
+    setErrors({});
     
     try {
       const result = await login(formData);
       
-      if (result?.success) {
+      if (result.success) {
         navigate('/member-dashboard');
+      } else {
+        setErrors({ general: result.error });
       }
     } catch (error) {
       console.error('Login failed:', error);
       setErrors({
-        general: error?.message || 'Login failed. Please check your credentials and try again.'
+        general: error.message || 'Login failed. Please check your credentials and try again.'
       });
     } finally {
       setIsLoading(false);
@@ -96,26 +75,47 @@ const LoginForm = () => {
   };
 
   const handleForgotPassword = async () => {
-    if (!formData?.emailOrPhone?.trim()) {
+    if (!formData.emailOrPhone.trim()) {
       setErrors({ emailOrPhone: 'Please enter your email address first' });
       return;
     }
     
-    const inputType = detectInputType(formData?.emailOrPhone);
-    if (inputType !== 'email') {
-      setErrors({ emailOrPhone: 'Please enter a valid email address for password reset' });
-      return;
+    // Check if input is email or phone
+    const isEmail = formData.emailOrPhone.includes('@');
+    let emailToUse = formData.emailOrPhone;
+    
+    // If it's a phone number, look up the associated email
+    if (!isEmail) {
+      try {
+        const { data: profiles, error: profileError } = await supabase
+          .from('profiles')
+          .select('email')
+          .eq('phone_number', formData.emailOrPhone)
+          .single();
+          
+        if (profileError || !profiles) {
+          setErrors({ emailOrPhone: 'No account found with this phone number.' });
+          return;
+        }
+        
+        emailToUse = profiles.email;
+      } catch (error) {
+        setErrors({ general: 'Error looking up account. Please try again.' });
+        return;
+      }
     }
     
     setIsLoading(true);
     try {
-      const result = await resetPassword(formData?.emailOrPhone);
-      if (result?.success) {
-        setSuccessMessage(result?.message);
+      const result = await resetPassword(emailToUse);
+      if (result.success) {
+        setSuccessMessage(result.message);
         setErrors({});
+      } else {
+        setErrors({ general: result.error });
       }
     } catch (error) {
-      setErrors({ general: error?.message || 'Password reset failed. Please try again.' });
+      setErrors({ general: error.message || 'Password reset failed. Please try again.' });
     } finally {
       setIsLoading(false);
     }
@@ -154,25 +154,12 @@ const LoginForm = () => {
               label="Email or Phone Number"
               type="text"
               placeholder="Enter your email or phone number"
-              value={formData?.emailOrPhone}
-              onChange={(e) => handleInputChange('emailOrPhone', e?.target?.value)}
-              error={errors?.emailOrPhone}
+              value={formData.emailOrPhone}
+              onChange={(e) => handleInputChange('emailOrPhone', e.target.value)}
+              error={errors.emailOrPhone}
               className="h-14 text-lg rounded-2xl border-2 border-gray-200 focus:border-blue-500 focus:ring-0 transition-all duration-200"
               required
             />
-            {formData?.emailOrPhone && (
-              <div className="flex items-center gap-2 text-sm text-gray-500 ml-1">
-                <Icon 
-                  name={detectInputType(formData?.emailOrPhone) === 'email' ? 'Mail' : 
-                        detectInputType(formData?.emailOrPhone) === 'phone' ? 'Phone' : 'AlertCircle'} 
-                  size={14} 
-                />
-                <span>
-                  {detectInputType(formData?.emailOrPhone) === 'email' ? 'Email detected' :
-                   detectInputType(formData?.emailOrPhone) === 'phone'? 'Phone number detected' : 'Invalid format'}
-                </span>
-              </div>
-            )}
           </div>
 
           {/* Password Input */}
@@ -182,9 +169,9 @@ const LoginForm = () => {
                 label="Password"
                 type={showPassword ? 'text' : 'password'}
                 placeholder="Enter your password"
-                value={formData?.password}
-                onChange={(e) => handleInputChange('password', e?.target?.value)}
-                error={errors?.password}
+                value={formData.password}
+                onChange={(e) => handleInputChange('password', e.target.value)}
+                error={errors.password}
                 className="h-14 text-lg rounded-2xl border-2 border-gray-200 focus:border-blue-500 focus:ring-0 pr-12 transition-all duration-200"
                 required
               />
@@ -202,8 +189,8 @@ const LoginForm = () => {
           <div className="flex items-center justify-between">
             <Checkbox
               label="Remember me"
-              checked={formData?.rememberMe}
-              onChange={(e) => handleInputChange('rememberMe', e?.target?.checked)}
+              checked={formData.rememberMe}
+              onChange={(e) => handleInputChange('rememberMe', e.target.checked)}
               className="text-sm"
             />
             
@@ -218,11 +205,11 @@ const LoginForm = () => {
           </div>
 
           {/* General Error */}
-          {errors?.general && (
+          {errors.general && (
             <div className="p-4 bg-red-50 border-2 border-red-200 rounded-2xl">
               <div className="flex items-start gap-3">
                 <Icon name="AlertCircle" size={20} className="text-red-500 mt-0.5 flex-shrink-0" />
-                <p className="text-sm text-red-600 leading-relaxed">{errors?.general}</p>
+                <p className="text-sm text-red-600 leading-relaxed">{errors.general}</p>
               </div>
             </div>
           )}
@@ -240,22 +227,10 @@ const LoginForm = () => {
             {isLoading ? 'Signing In...' : 'Sign In'}
           </Button>
 
-          {/* Demo Credentials */}
-          <div className="p-4 bg-gray-50 border-2 border-gray-200 rounded-2xl">
-            <h4 className="font-semibold text-gray-700 mb-2 flex items-center gap-2">
-              <Icon name="Info" size={16} />
-              Demo Credentials
-            </h4>
-            <div className="space-y-1 text-sm text-gray-600">
-              <p><strong>Admin:</strong> admin@mukando.com / admin123</p>
-              <p><strong>Member:</strong> member@mukando.com / member123</p>
-            </div>
-          </div>
-
           {/* Create Account Link */}
           <div className="text-center pt-4">
             <p className="text-gray-500">
-              Do not have an account?{' '}
+              Don't have an account?{' '}
               <button
                 type="button"
                 onClick={() => navigate('/auth/register')}

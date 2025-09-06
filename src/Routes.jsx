@@ -58,7 +58,7 @@ function AppRoutes() {
         <Suspense fallback={<LoadingSpinner />}>
           <RouterRoutes>
             {/* Root path redirect */}
-            <Route path="/" element={<Navigate to="/auth/login" replace />} />
+            <Route path="/" element={<Navigate to="/member-dashboard" replace />} />
 
             {/* Authentication Routes */}
             <Route path="/auth" element={<AuthLayout />}>
