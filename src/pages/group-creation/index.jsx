@@ -1,70 +1,70 @@
 import React, { useState } from 'react';
+import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
-import Header from '../../components/ui/Header';
-import Sidebar from '../../components/ui/Sidebar';
-import Icon from '../../components/AppIcon';
+import AppIcon from '../../components/AppIcon';
 import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
 import { useAuth } from '../../contexts/AuthContext';
 import { createGroup } from '../../lib/supabase';
 
-const CreateGroup = () => {
+const GroupCreation = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const [groupName, setGroupName] = useState('');
-  const [description, setDescription] = useState('');
+  const { register, handleSubmit, formState: { errors } } = useForm();
   const [isLoading, setIsLoading] = useState(false);
+  const [apiError, setApiError] = useState(null);
 
-  const handleCreateGroup = async (e) => {
-    e.preventDefault();
+  const onSubmit = async (data) => {
     setIsLoading(true);
+    setApiError(null);
     try {
-      const newGroup = await createGroup({ name: groupName, description, created_by: user.id });
-      if (newGroup) {
-        navigate(`/group-management`);
-      } else {
-        alert('Failed to create group. Please try again.');
-      }
+      await createGroup({ ...data, created_by: user.id });
+      navigate('/group-management');
     } catch (error) {
-      console.error('Error creating group:', error);
-      alert('Failed to create group. Please try again.');
+      setApiError(error.message || 'Failed to create group.');
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <Header />
-      <Sidebar />
-      <main className="lg:ml-60 pt-16">
-        <div className="p-6 max-w-4xl mx-auto">
-          <div className="flex items-center gap-3 mb-6">
-            <Icon name="Users" size={24} className="text-primary" />
-            <h1 className="text-2xl font-semibold text-foreground">Create a New Group</h1>
-          </div>
-          <form onSubmit={handleCreateGroup} className="space-y-6">
-            <Input
-              label="Group Name"
-              placeholder="Enter the name of your group"
-              value={groupName}
-              onChange={(e) => setGroupName(e.target.value)}
-              required
-            />
-            <Input
-              label="Group Description"
-              placeholder="Enter a brief description of your group"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-            />
+    <div className="space-y-8">
+      <header>
+        <h1 className="text-3xl font-bold text-foreground">Create a New Group</h1>
+        <p className="text-muted-foreground mt-1">Start a new savings community with your friends and family.</p>
+      </header>
+
+      <div className="bg-card rounded-xl border border-border p-6 lg:p-8 max-w-2xl mx-auto">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+          {apiError && (
+            <div className="p-3 bg-destructive/10 border border-destructive/20 rounded-lg flex items-center gap-3">
+              <AppIcon name="AlertTriangle" className="text-destructive" size={20} />
+              <p className="text-sm font-medium text-destructive">{apiError}</p>
+            </div>
+          )}
+
+          <Input
+            label="Group Name"
+            placeholder="e.g. Family Savings"
+            {...register('name', { required: 'Group name is required' })}
+            error={errors.name?.message}
+          />
+
+          <Input
+            label="Group Description"
+            placeholder="A short description of your group's purpose."
+            {...register('description')}
+          />
+
+          <div className="flex justify-end">
             <Button type="submit" loading={isLoading}>
               Create Group
             </Button>
-          </form>
-        </div>
-      </main>
+          </div>
+        </form>
+      </div>
     </div>
   );
 };
 
-export default CreateGroup;
+export default GroupCreation;

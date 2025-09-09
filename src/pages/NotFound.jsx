@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import Button from 'components/ui/Button';
-import Icon from 'components/AppIcon';
+import { Home, ArrowLeft, Mail, AlertCircle } from 'lucide-react';
+import { cn } from '../utils/cn';
 
 const NotFound = () => {
   const navigate = useNavigate();
@@ -48,7 +48,7 @@ const NotFound = () => {
         {/* Additional helpful info */}
         <div className="bg-muted/50 p-4 rounded-lg mb-8 text-sm text-left">
           <p className="font-medium mb-2 flex items-center gap-2">
-            <Icon name="Info" size={16} className="text-primary" />
+            <AlertCircle size={16} className="text-primary" />
             Trying to access:
           </p>
           <code className="bg-background p-2 rounded text-xs block overflow-x-auto font-data">
@@ -58,25 +58,21 @@ const NotFound = () => {
 
         {/* Action buttons */}
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
-          <Button
-            variant="default"
-            iconName="ArrowLeft"
-            iconPosition="left"
+          <button
             onClick={handleGoBack}
-            className="flex-1 sm:flex-none"
+            className="flex items-center justify-center gap-2 bg-card text-foreground px-6 py-3 rounded-xl font-medium hover:bg-muted transition-all duration-200 border border-border shadow-warm"
           >
+            <ArrowLeft size={18} />
             Go Back
-          </Button>
+          </button>
 
-          <Button
-            variant="outline"
-            iconName="Home"
-            iconPosition="left"
+          <button
             onClick={handleGoHome}
-            className="flex-1 sm:flex-none"
+            className="flex items-center justify-center gap-2 bg-primary text-primary-foreground px-6 py-3 rounded-xl font-medium hover:bg-primary/90 transition-all duration-200 transform hover:scale-105 shadow-warm"
           >
+            <Home size={18} />
             Home Page
-          </Button>
+          </button>
         </div>
 
         {/* Additional help option */}
@@ -84,27 +80,26 @@ const NotFound = () => {
           <p className="text-sm text-muted-foreground mb-3">
             Can't find what you're looking for?
           </p>
-          <Button
-            variant="ghost"
-            size="sm"
-            iconName="Mail"
+          <button
             onClick={handleReportIssue}
+            className="flex items-center justify-center gap-2 text-primary hover:text-primary/80 transition-colors text-sm"
           >
+            <Mail size={16} />
             Report this issue
-          </Button>
+          </button>
         </div>
 
         {/* Quick links */}
         <div className="mt-8 flex justify-center gap-4 text-xs text-muted-foreground">
           <button 
-            onClick={() => navigate('/user-login')}
+            onClick={() => navigate('/auth/login')}
             className="hover:text-foreground transition-colors"
           >
             Sign In
           </button>
           <span>•</span>
           <button 
-            onClick={() => navigate('/user-registration')}
+            onClick={() => navigate('/auth/register')}
             className="hover:text-foreground transition-colors"
           >
             Sign Up

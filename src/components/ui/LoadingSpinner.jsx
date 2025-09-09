@@ -1,6 +1,6 @@
 import { cn } from '../../utils/cn';
 
-const LoadingSpinner = ({ size = 'md', className }) => {
+const LoadingSpinner = ({ size = 'md', className, text = null }) => {
   const sizeClasses = {
     sm: 'w-4 h-4',
     md: 'w-8 h-8',
@@ -9,16 +9,20 @@ const LoadingSpinner = ({ size = 'md', className }) => {
   };
 
   return (
-    <div
-      className={cn(
-        'animate-spin rounded-full border-2 border-solid border-current border-r-transparent',
-        sizeClasses[size],
-        className
+    <div className={cn("flex flex-col items-center justify-center", className)}>
+      <div
+        className={cn(
+          'animate-spin rounded-full border-3 border-solid border-current border-r-transparent',
+          sizeClasses[size]
+        )}
+        role="status"
+        aria-label="Loading"
+      >
+        <span className="sr-only">Loading...</span>
+      </div>
+      {text && (
+        <p className="mt-2 text-sm text-slate-500">{text}</p>
       )}
-      role="status"
-      aria-label="Loading"
-    >
-      <span className="sr-only">Loading...</span>
     </div>
   );
 };

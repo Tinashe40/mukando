@@ -1,171 +1,152 @@
-import React, { useState, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
-import Icon from '../AppIcon';
+import React, { useState } from 'react';
+import { NavLink, useLocation } from 'react-router-dom';
+import AppIcon from '../AppIcon';
 import Button from './Button';
+import { cn } from '../../utils/cn';
 import { useAuth } from '../../contexts/AuthContext';
-import { getFinancialOverview } from '../../lib/supabase';
 
-const Sidebar = ({ isCollapsed = false, onToggle }) => {
+const navigationItems = [
+  {
+    title: 'Dashboards',
+    links: [
+      { path: '/member-dashboard', icon: 'LayoutDashboard', label: 'Member Dashboard', roles: ['member', 'admin'] },
+      { path: '/admin-dashboard', icon: 'ShieldCheck', label: 'Admin Dashboard', roles: ['admin'] },
+    ],
+  },
+  {
+    title: 'Groups',
+    links: [
+      { path: '/group-creation', icon: 'PlusSquare', label: 'Create Group', roles: ['member', 'admin'] },
+      { path: '/group-management', icon: 'Users', label: 'Manage Groups', roles: ['admin'] },
+      { path: '/public-groups', icon: 'Globe', label: 'Public Groups', roles: ['member', 'admin'] },
+    ],
+  },
+  {
+    title: 'Finance',
+    links: [
+      { path: '/loan-request', icon: 'Handshake', label: 'Request Loan', roles: ['member', 'admin'] },
+      { path: '/record-contribution', icon: 'PiggyBank', label: 'Record Contribution', roles: ['member', 'admin'] },
+      { path: '/record-repayment', icon: 'Receipt', label: 'Record Repayment', roles: ['member', 'admin'] },
+      { path: '/payment-processing', icon: 'DollarSign', label: 'Payment Processing', roles: ['member', 'admin'] },
+    ],
+  },
+  {
+    title: 'History & Analytics',
+    links: [
+      { path: '/contribution-history', icon: 'History', label: 'Contribution History', roles: ['member', 'admin'] },
+      { path: '/repayment-history', icon: 'History', label: 'Repayment History', roles: ['member', 'admin'] },
+      { path: '/group-analytics', icon: 'PieChart', label: 'Group Analytics', roles: ['admin'] },
+      { path: '/audit-log', icon: 'ClipboardList', label: 'Audit Log', roles: ['admin'] },
+    ],
+  },
+  {
+    title: 'Tools',
+    links: [
+      { path: '/report-generation', icon: 'FileText', label: 'Generate Reports', roles: ['admin'] },
+      { path: '/notifications-center', icon: 'Bell', label: 'Notifications', roles: ['member', 'admin'] },
+    ],
+  },
+];
+
+const Sidebar = ({ isCollapsed, onToggle }) => {
+  const { user, profile, logout } = useAuth();
   const location = useLocation();
-  const { user, profile } = useAuth();
-  const [financialStatus, setFinancialStatus] = useState(null);
+  const [isMobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  useEffect(() => {
-    const fetchFinancialStatus = async () => {
-      if (user) {
-        const data = await getFinancialOverview(user.id);
-        setFinancialStatus(data);
-      }
-    };
-    fetchFinancialStatus();
-  }, [user]);
+  const userRole = profile?.role || 'member';
 
-  const navigationItems = [
-    {
-      label: 'Dashboard',
-      path: '/member-dashboard',
-      icon: 'LayoutDashboard',
-      roles: ['member', 'admin', 'treasurer']
-    },
-    {
-      label: 'My Loans',
-      path: '/loan-request',
-      icon: 'CreditCard',
-      roles: ['member', 'admin', 'treasurer']
-    },
-    {
-      label: 'Payments',
-      path: '/payment-processing',
-      icon: 'Wallet',
-      roles: ['member', 'admin', 'treasurer']
-    },
-    {
-      label: 'Notifications',
-      path: '/notifications-center',
-      icon: 'Bell',
-      roles: ['member', 'admin', 'treasurer']
-    }
-  ];
+  const renderNavLinks = (links) => {
+    return links
+      .filter(item => item.roles.includes(userRole))
+      .map(item => (
+        <NavLink
+          key={item.path}
+          to={item.path}
+          onClick={() => setMobileMenuOpen(false)}
+          className={({ isActive }) =>
+            cn(
+              'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-semibold transition-colors',
+              isCollapsed ? 'justify-center' : '',
+              isActive
+                ? 'bg-primary/10 text-primary'
+                : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+            )
+          }
+        >
+          <AppIcon name={item.icon} size={20} />
+          {!isCollapsed && <span>{item.label}</span>}
+        </NavLink>
+      ));
+  };
 
-  const adminItems = [
-    {
-      label: 'Group Management',
-      path: '/group-management',
-      icon: 'Users',
-      roles: ['admin', 'treasurer']
-    },
-    {
-      label: 'Group Analytics',
-      path: '/group-analytics',
-      icon: 'BarChart3',
-      roles: ['admin', 'treasurer']
-    }
-  ];
+  const sidebarContent = (
+    <>
+      <div className={cn('flex items-center p-4 h-16 border-b border-border', isCollapsed ? 'justify-center' : 'justify-between')}>
+        {!isCollapsed && (
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
+              <AppIcon name="Coins" size={20} className="text-primary-foreground" />
+            </div>
+            <span className="text-xl font-bold text-foreground">Mukando</span>
+          </div>
+        )}
+        <Button variant="ghost" size="icon" onClick={onToggle} className="hidden lg:flex">
+          <AppIcon name={isCollapsed ? 'PanelRightOpen' : 'PanelLeftOpen'} size={18} />
+        </Button>
+      </div>
 
-  const filteredNavItems = navigationItems.filter(item => item.roles.includes(profile?.roles?.name));
-  const filteredAdminItems = adminItems.filter(item => item.roles.includes(profile?.roles?.name));
+      <nav className="flex-1 p-4 space-y-4 overflow-y-auto">
+        {navigationItems.map(section => {
+          const filteredLinks = section.links.filter(link => link.roles.includes(userRole));
+          if (filteredLinks.length === 0) return null;
+
+          return (
+            <div key={section.title}>
+              {!isCollapsed && <h2 className="px-3 py-2 text-xs font-bold text-muted-foreground uppercase tracking-wider">{section.title}</h2>}
+              <div className="space-y-1">
+                {renderNavLinks(filteredLinks)}
+              </div>
+            </div>
+          );
+        })}
+      </nav>
+
+      <div className="p-4 border-t border-border">
+        <div className={cn('flex items-center gap-3', isCollapsed ? 'justify-center' : '')}>
+          <img src={profile?.avatar_url || 'https://avatar.vercel.sh/Vercel'} alt="User" className="w-10 h-10 rounded-full" />
+          {!isCollapsed && (
+            <div className="flex-1 min-w-0">
+              <p className="font-semibold text-foreground truncate">{profile?.full_name || user?.email}</p>
+              <p className="text-xs text-muted-foreground capitalize">{userRole}</p>
+            </div>
+          )}
+          {!isCollapsed && (
+            <Button variant="ghost" size="icon" onClick={logout}>
+              <AppIcon name="LogOut" size={18} />
+            </Button>
+          )}
+        </div>
+      </div>
+    </>
+  );
 
   return (
     <>
-      <aside className={`fixed left-0 top-0 z-40 h-screen bg-card border-r border-border shadow-warm transition-all duration-300 ${
-        isCollapsed ? 'w-16' : 'w-60'
-      } hidden lg:block`}>
-        <div className="flex flex-col h-full">
-          <div className="flex items-center justify-between p-4 border-b border-border">
-            {!isCollapsed && (
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-                  <Icon name="Coins" size={20} color="white" />
-                </div>
-                <span className="text-xl font-semibold text-foreground font-heading">
-                  Mukando
-                </span>
-              </div>
-            )}
-            <Button variant="ghost" size="icon" onClick={onToggle} className="hidden lg:flex">
-              <Icon name={isCollapsed ? 'ChevronRight' : 'ChevronLeft'} size={16} />
-            </Button>
-          </div>
-
-          {!isCollapsed && financialStatus && (
-            <div className="p-4 border-b border-border">
-              <div className="bg-muted rounded-lg p-3">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm text-muted-foreground">Balance</span>
-                </div>
-                <div className="text-lg font-semibold text-foreground font-data">
-                  {`$${financialStatus.total_savings}`}
-                </div>
-              </div>
-            </div>
-          )}
-
-          <nav className="flex-1 p-4 space-y-2">
-            <div className="space-y-1">
-              {filteredNavItems.map((item) => (
-                <a
-                  key={item.path}
-                  href={item.path}
-                  className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 group ${
-                    location.pathname === item.path
-                      ? 'bg-primary text-primary-foreground shadow-warm'
-                      : 'text-muted-foreground hover:text-foreground hover:bg-muted'
-                  } ${isCollapsed ? 'justify-center' : ''}`}>
-                  <Icon name={item.icon} size={20} />
-                  {!isCollapsed && <span className="flex-1">{item.label}</span>}
-                </a>
-              ))}
-            </div>
-
-            {filteredAdminItems.length > 0 && (
-              <div className="pt-4">
-                {!isCollapsed && (
-                  <div className="px-3 py-2">
-                    <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                      Administration
-                    </span>
-                  </div>
-                )}
-                <div className="space-y-1">
-                  {filteredAdminItems.map((item) => (
-                    <a
-                      key={item.path}
-                      href={item.path}
-                      className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 group ${
-                        location.pathname === item.path
-                          ? 'bg-secondary text-secondary-foreground shadow-warm'
-                          : 'text-muted-foreground hover:text-foreground hover:bg-muted'
-                      } ${isCollapsed ? 'justify-center' : ''}`}>
-                      <Icon name={item.icon} size={20} />
-                      {!isCollapsed && <span className="flex-1">{item.label}</span>}
-                    </a>
-                  ))}
-                </div>
-              </div>
-            )}
-          </nav>
-
-          <div className="p-4 border-t border-border">
-            {!isCollapsed ? (
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 bg-secondary rounded-full flex items-center justify-center">
-                  <Icon name="User" size={16} color="white" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-foreground truncate">{profile?.full_name}</p>
-                  <p className="text-xs text-muted-foreground truncate">{profile?.roles?.name}</p>
-                </div>
-              </div>
-            ) : (
-              <div className="flex justify-center">
-                <div className="w-8 h-8 bg-secondary rounded-full flex items-center justify-center">
-                  <Icon name="User" size={16} color="white" />
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
+      {/* Mobile Sidebar */}
+      <div className={cn('fixed inset-0 bg-black/50 z-40 lg:hidden', isMobileMenuOpen ? 'block' : 'hidden')} onClick={() => setMobileMenuOpen(false)} />
+      <aside className={cn('fixed left-0 top-0 z-50 h-screen bg-card border-r border-border shadow-lg transition-transform duration-300 w-64 lg:hidden', isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full')}>
+        {sidebarContent}
       </aside>
+
+      {/* Desktop Sidebar */}
+      <aside className={cn('fixed left-0 top-0 z-30 h-screen bg-card border-r border-border shadow-warm transition-all duration-300 hidden lg:flex flex-col', isCollapsed ? 'w-20' : 'w-64')}>
+        {sidebarContent}
+      </aside>
+
+      {/* Mobile Menu Button */}
+      <Button variant="ghost" size="icon" onClick={() => setMobileMenuOpen(true)} className="lg:hidden fixed top-4 left-4 z-20 bg-card">
+        <AppIcon name="Menu" size={20} />
+      </Button>
     </>
   );
 };

@@ -46,8 +46,9 @@ const AuthenticationOptions = () => {
   };
 
   const handleMFAVerification = async () => {
-    if (!mfaCode || mfaCode?.length !== 6) return;
-    
+    if (!mfaCode || mfaCode?.length !== 6){
+      return;
+    }
     setIsVerifying(true);
     
     // Simulate MFA verification
@@ -73,20 +74,20 @@ const AuthenticationOptions = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Multi-Factor Authentication */}
       {showMFA && (
-        <div className="bg-card rounded-lg p-6 border border-border shadow-warm">
-          <div className="flex items-center gap-2 mb-4">
-            <Icon name="Shield" size={20} className="text-primary" />
-            <h3 className="font-semibold text-foreground">Two-Factor Authentication</h3>
+        <div className="bg-white rounded-xl p-4 sm:p-6 border border-slate-200 shadow-sm">
+          <div className="flex items-center gap-2 mb-3 sm:mb-4">
+            <Icon name="Shield" size={18} className="text-blue-600" />
+            <h3 className="font-semibold text-slate-900 text-sm sm:text-base">Two-Factor Authentication</h3>
           </div>
           
-          <p className="text-sm text-muted-foreground mb-4">
+          <p className="text-xs sm:text-sm text-slate-600 mb-3 sm:mb-4">
             Enter the 6-digit code sent to your registered phone number
           </p>
           
-          <div className="space-y-4">
+          <div className="space-y-3 sm:space-y-4">
             <Input
               label="Verification Code"
               type="text"
@@ -94,14 +95,14 @@ const AuthenticationOptions = () => {
               value={mfaCode}
               onChange={(e) => setMfaCode(e?.target?.value?.replace(/\D/g, '')?.slice(0, 6))}
               maxLength={6}
-              className="text-center font-data text-lg tracking-widest"
+              className="text-center font-data text-base sm:text-lg tracking-widest"
             />
             
-            <div className="flex gap-3">
+            <div className="flex gap-2 sm:gap-3">
               <Button
                 variant="outline"
                 onClick={() => setShowMFA(false)}
-                className="flex-1"
+                className="flex-1 text-xs sm:text-sm"
               >
                 Cancel
               </Button>
@@ -110,33 +111,33 @@ const AuthenticationOptions = () => {
                 onClick={handleMFAVerification}
                 loading={isVerifying}
                 disabled={mfaCode?.length !== 6}
-                className="flex-1"
+                className="flex-1 text-xs sm:text-sm"
               >
                 Verify
               </Button>
             </div>
             
-            <button className="text-sm text-primary hover:text-primary/80 transition-colors w-full text-center">
+            <button className="text-xs sm:text-sm text-blue-600 hover:text-blue-700 transition-colors w-full text-center">
               Resend code
             </button>
           </div>
         </div>
       )}
       {/* Biometric Authentication */}
-      <div className="bg-card rounded-lg p-6 border border-border shadow-warm">
-        <div className="flex items-center gap-2 mb-4">
-          <Icon name="Fingerprint" size={20} className="text-secondary" />
-          <h3 className="font-semibold text-foreground">Quick Access</h3>
+      <div className="bg-white rounded-xl p-4 sm:p-6 border border-slate-200 shadow-sm">
+        <div className="flex items-center gap-2 mb-3 sm:mb-4">
+          <Icon name="Fingerprint" size={18} className="text-indigo-600" />
+          <h3 className="font-semibold text-slate-900 text-sm sm:text-base">Quick Access</h3>
         </div>
         
-        <div className="space-y-3">
+        <div className="space-y-2 sm:space-y-3">
           <Button
             variant="outline"
             onClick={handleBiometricLogin}
             iconName="Fingerprint"
             iconPosition="left"
             fullWidth
-            className="justify-start"
+            className="justify-start text-xs sm:text-sm"
           >
             Use Fingerprint or Face ID
           </Button>
@@ -147,20 +148,20 @@ const AuthenticationOptions = () => {
             iconName="Smartphone"
             iconPosition="left"
             fullWidth
-            className="justify-start"
+            className="justify-start text-xs sm:text-sm"
           >
             SMS Verification
           </Button>
         </div>
       </div>
       {/* Social Login */}
-      <div className="bg-card rounded-lg p-6 border border-border shadow-warm">
-        <div className="flex items-center gap-2 mb-4">
-          <Icon name="Zap" size={20} className="text-warning" />
-          <h3 className="font-semibold text-foreground">Social Login</h3>
+      <div className="bg-white rounded-xl p-4 sm:p-6 border border-slate-200 shadow-sm">
+        <div className="flex items-center gap-2 mb-3 sm:mb-4">
+          <Icon name="Zap" size={18} className="text-yellow-500" />
+          <h3 className="font-semibold text-slate-900 text-sm sm:text-base">Social Login</h3>
         </div>
         
-        <div className="space-y-2">
+        <div className="space-y-2 sm:space-y-3">
           {socialLoginOptions?.map((option) => (
             <Button
               key={option.provider}
@@ -171,24 +172,24 @@ const AuthenticationOptions = () => {
               iconName={option.icon}
               iconPosition="left"
               fullWidth
-              className="justify-start"
+              className="justify-start text-xs sm:text-sm"
             >
               Continue with {option.name}
             </Button>
           ))}
         </div>
         
-        <p className="text-xs text-muted-foreground mt-3">
+        <p className="text-xs text-slate-500 mt-2 sm:mt-3">
           Login using your favorite social accounts.
         </p>
       </div>
       {/* Security Notice */}
-      <div className="bg-primary/5 rounded-lg p-4 border border-primary/20">
-        <div className="flex items-start gap-3">
-          <Icon name="Info" size={16} className="text-primary mt-0.5" />
+      <div className="bg-blue-50 rounded-xl p-3 sm:p-4 border border-blue-200">
+        <div className="flex items-start gap-2 sm:gap-3">
+          <Icon name="Info" size={14} className="text-blue-600 mt-0.5" />
           <div>
-            <p className="text-sm font-medium text-foreground">Security Notice</p>
-            <p className="text-xs text-muted-foreground mt-1">
+            <p className="text-xs sm:text-sm font-medium text-slate-900">Security Notice</p>
+            <p className="text-xs text-slate-600 mt-1">
               For enhanced security, we recommend enabling two-factor authentication 
               and using biometric login where available.
             </p>
@@ -198,6 +199,5 @@ const AuthenticationOptions = () => {
     </div>
   );
 };
-
 
 export default AuthenticationOptions;

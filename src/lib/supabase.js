@@ -1,35 +1,102 @@
 import { createClient } from '@supabase/supabase-js';
 
-// Initialize Supabase client
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+// Validate environment variables
+const supabaseUrl = import.meta.env?.VITE_SUPABASE_URL
+const supabaseAnonKey = import.meta.env?.VITE_SUPABASE_ANON_KEY
 
+// Check if environment variables are properly configured
 if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error('Missing Supabase environment variables');
+  console.error('Missing Supabase environment variables:', {
+    url: supabaseUrl ? 'Set' : 'Missing VITE_SUPABASE_URL',
+    key: supabaseAnonKey ? 'Set' : 'Missing VITE_SUPABASE_ANON_KEY'
+  });
 }
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
-
-// Authentication functions
-export const getUserProfile = async (userId) => {
+// Validate URL format
+const isValidUrl = (string) => {
   try {
-    const { data, error } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', userId)
-      .single();
-    
-    if (error) {
-      console.error('Error fetching user profile:', error);
+    new URL(string);
+    return true;
+  } catch (_) {
+    return false;
+  }
+}
+
+if (supabaseUrl && !isValidUrl(supabaseUrl)) {
+  console.error('Invalid VITE_SUPABASE_URL format:', supabaseUrl);
+}
+
+// Create supabase client with fallback values to prevent crashes
+export const supabase = supabaseUrl && supabaseAnonKey && isValidUrl(supabaseUrl) 
+  ? createClient(supabaseUrl, supabaseAnonKey)
+  : null;
+
+// Warning if supabase client is not initialized
+if (!supabase) {
+  console.warn('Supabase client not initialized. Please check your environment variables.');
+}
+
+// Helper function to get current user
+export const getCurrentUser = async () => {
+  try {
+    if (!supabase) {
+      console.error('Supabase client not initialized');
       return null;
     }
     
-    return data;
+    const { data: { session }, error } = await supabase?.auth?.getSession()
+    if (error) {
+      throw error
+    }
+    return session?.user || null
   } catch (error) {
-    console.error('Exception fetching user profile:', error);
-    return null;
+    console.error('Error getting current user:', error)
+    return null
   }
-};
+}
+
+// Helper function to get user profile
+export const getUserProfile = async (userId) => {
+  try {
+    if (!supabase) {
+      console.error('Supabase client not initialized');
+      return null;
+    }
+    
+    const { data, error } = await supabase?.from('user_profiles')?.select('*')?.eq('id', userId)?.single()
+    
+    if (error) {
+      throw error
+    }
+    return data
+  } catch (error) {
+    console.error('Error getting user profile:', error)
+    return null
+  }
+}
+
+// Helper function to update user profile
+export const updateUserProfile = async (userId, updates) => {
+  try {
+    if (!supabase) {
+      console.error('Supabase client not initialized');
+      throw new Error('Supabase client not initialized');
+    }
+    
+    const { data, error } = await supabase?.from('user_profiles')?.update({
+        ...updates,
+        updated_at: new Date()?.toISOString()
+      })?.eq('id', userId)?.select()?.single()
+    
+    if (error) {
+      throw error
+    }
+    return data
+  } catch (error) {
+    console.error('Error updating user profile:', error)
+    throw error
+  }
+}
 
 export const getUserPermissions = async (userId) => {
   const { data, error } = await supabase.rpc('get_user_permissions_new', { p_user_id: userId });

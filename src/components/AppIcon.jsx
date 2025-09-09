@@ -1,7 +1,7 @@
 import React from 'react';
 import * as LucideIcons from 'lucide-react';
 import { HelpCircle } from 'lucide-react';
-
+import { cn } from 'utils/cn';
 function Icon({
     name,
     size = 24,

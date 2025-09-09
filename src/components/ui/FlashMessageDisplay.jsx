@@ -1,6 +1,7 @@
 import React from 'react';
 import { useFlashMessage } from '../../contexts/FlashMessageContext';
 import Icon from '../AppIcon';
+import { cn } from '../../utils/cn';
 
 const FlashMessageDisplay = () => {
   const { messages, removeMessage } = useFlashMessage();

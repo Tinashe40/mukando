@@ -1,19 +1,28 @@
-import React from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import LoadingSpinner from './ui/LoadingSpinner';
 
-const withAuthorization = (WrappedComponent, allowedRoles) => {
+const withAuthorization = (allowedRoles) => (WrappedComponent) => {
   const ComponentWithAuthorization = (props) => {
-    const { profile, permissions } = useAuth();
+    const { profile, isLoading, isAuthenticated } = useAuth();
 
-    if (!profile) {
-      return <Navigate to="/user-login" />;
+    if (isLoading) {
+      return <LoadingSpinner />;
     }
 
-    const userRole = profile.roles?.name;
+    if (!isAuthenticated) {
+      return <Navigate to="/auth/login" replace />;
+    }
+
+    if (!profile) {
+      // Profile is still loading or not available
+      return <LoadingSpinner />;
+    }
+
+    const userRole = profile.role; // Assuming profile.role holds the role name
 
     if (allowedRoles && !allowedRoles.includes(userRole)) {
-      return <Navigate to="/unauthorized" />;
+      return <Navigate to="/unauthorized" replace />;
     }
 
     return <WrappedComponent {...props} />;

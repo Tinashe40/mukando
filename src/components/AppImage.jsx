@@ -15,12 +15,16 @@ function Image({
 
   const handleError = (e) => {
     setError(true);
-    if (props.onError) props.onError(e);
-  };
+    if (props.onError) {
+      props.onError(e);
+    }
+};
 
   const handleLoad = (e) => {
     setLoaded(true);
-    if (props.onLoad) props.onLoad(e);
+    if (props.onLoad) {
+      props.onLoad(e);
+    }
   };
 
   if (error && showFallbackOnError) {
