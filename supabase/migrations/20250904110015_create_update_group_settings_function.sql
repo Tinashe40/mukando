@@ -1,4 +1,4 @@
-CREATE OR REPLACE FUNCTION update_group_settings(p_group_id BIGINT, p_settings JSONB)
+CREATE OR REPLACE FUNCTION update_group_settings(p_group_id UUID, p_settings JSONB)
 RETURNS JSON AS $$
 DECLARE
   updated_group JSON;

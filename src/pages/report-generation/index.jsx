@@ -1,15 +1,12 @@
 import React, { useState } from 'react';
-import Header from '../../components/ui/Header';
-import Sidebar from '../../components/ui/Sidebar';
-import Icon from '../../components/AppIcon';
+import { useForm } from 'react-hook-form';
+import AppIcon from '../../components/AppIcon';
 import Button from '../../components/ui/Button';
-import Select from '../../components/ui/Select';
 import Input from '../../components/ui/Input';
+import Select from '../../components/ui/Select';
 
 const ReportGeneration = () => {
-  const [reportType, setReportType] = useState('financial_summary');
-  const [startDate, setStartDate] = useState('');
-  const [endDate, setEndDate] = useState('');
+  const { register, handleSubmit, formState: { errors } } = useForm();
   const [isLoading, setIsLoading] = useState(false);
 
   const reportOptions = [
@@ -19,53 +16,54 @@ const ReportGeneration = () => {
     { value: 'audit_log', label: 'Audit Log' },
   ];
 
-  const handleGenerateReport = async (e) => {
-    e.preventDefault();
+  const onSubmit = async (data) => {
     setIsLoading(true);
-    // Simulate report generation
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    alert(`Generating ${reportType} report from ${startDate} to ${endDate}`);
+    // Simulate API call
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    console.log('Generating report with data:', data);
     setIsLoading(false);
+    // Add success message/download logic here
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <Header />
-      <Sidebar />
-      <main className="lg:ml-60 pt-16">
-        <div className="p-6 max-w-4xl mx-auto">
-          <div className="flex items-center gap-3 mb-6">
-            <Icon name="FileText" size={24} className="text-primary" />
-            <h1 className="text-2xl font-semibold text-foreground">Report Generation</h1>
-          </div>
-          <form onSubmit={handleGenerateReport} className="space-y-6">
-            <Select
-              label="Report Type"
-              options={reportOptions}
-              value={reportType}
-              onChange={setReportType}
-              required
-            />
+    <div className="space-y-8">
+      <header>
+        <h1 className="text-3xl font-bold text-foreground">Report Generation</h1>
+        <p className="text-muted-foreground mt-1">Generate and export detailed reports for your records.</p>
+      </header>
+
+      <div className="bg-card rounded-xl border border-border p-6 lg:p-8 max-w-2xl mx-auto">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+          <Select
+            label="Report Type"
+            {...register('reportType', { required: 'Please select a report type' })}
+            options={reportOptions}
+            error={errors.reportType?.message}
+          />
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <Input
               label="Start Date"
               type="date"
-              value={startDate}
-              onChange={(e) => setStartDate(e.target.value)}
-              required
+              {...register('startDate', { required: 'Start date is required' })}
+              error={errors.startDate?.message}
             />
             <Input
               label="End Date"
               type="date"
-              value={endDate}
-              onChange={(e) => setEndDate(e.target.value)}
-              required
+              {...register('endDate', { required: 'End date is required' })}
+              error={errors.endDate?.message}
             />
+          </div>
+
+          <div className="flex justify-end">
             <Button type="submit" loading={isLoading}>
+              <AppIcon name="FileText" className="mr-2" />
               Generate Report
             </Button>
-          </form>
-        </div>
-      </main>
+          </div>
+        </form>
+      </div>
     </div>
   );
 };

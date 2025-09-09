@@ -1,4 +1,4 @@
-CREATE OR REPLACE FUNCTION invite_member(p_group_id BIGINT, p_email TEXT, p_phone TEXT, p_role TEXT)
+CREATE OR REPLACE FUNCTION invite_member(p_group_id UUID, p_email TEXT, p_phone TEXT, p_role TEXT)
 RETURNS JSON AS $$
 DECLARE
   invitation_data JSON;

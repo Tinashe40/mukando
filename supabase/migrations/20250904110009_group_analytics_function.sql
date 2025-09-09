@@ -1,4 +1,4 @@
-CREATE OR REPLACE FUNCTION get_group_analytics(p_group_id BIGINT)
+CREATE OR REPLACE FUNCTION get_group_analytics(p_group_id UUID)
 RETURNS JSON AS $$
 DECLARE
   analytics_data JSON;

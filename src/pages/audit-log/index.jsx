@@ -1,9 +1,7 @@
-import React, { useState, useEffect } from 'react';
-import Header from '../../components/ui/Header';
-import Sidebar from '../../components/ui/Sidebar';
-import Icon from '../../components/AppIcon';
-import { getAuditLogs } from '../../lib/supabase';
+import React, { useEffect, useState } from 'react';
+import AppIcon from '../../components/AppIcon';
 import LoadingSpinner from '../../components/ui/LoadingSpinner';
+import { getAuditLogs } from '../../lib/supabase';
 
 const AuditLog = () => {
   const [auditLogs, setAuditLogs] = useState([]);
@@ -20,36 +18,40 @@ const AuditLog = () => {
   }, []);
 
   return (
-    <div className="min-h-screen bg-background">
-      <Header />
-      <Sidebar />
-      <main className="lg:ml-60 pt-16">
-        <div className="p-6 max-w-4xl mx-auto">
-          <div className="flex items-center gap-3 mb-6">
-            <Icon name="ClipboardList" size={24} className="text-primary" />
-            <h1 className="text-2xl font-semibold text-foreground">Audit Log</h1>
-          </div>
-          {isLoading ? (
-            <LoadingSpinner />
-          ) : (
-            <div className="bg-card rounded-lg border border-border shadow-warm">
-              <ul className="divide-y divide-border">
+    <div className="space-y-8">
+      <header>
+        <h1 className="text-3xl font-bold text-foreground">Audit Log</h1>
+        <p className="text-muted-foreground mt-1">Track all system activities and changes.</p>
+      </header>
+
+      {isLoading ? (
+        <div className="flex items-center justify-center h-64"><LoadingSpinner /></div>
+      ) : (
+        <div className="bg-card rounded-xl border border-border">
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-border">
+              <thead className="bg-muted/50">
+                <tr>
+                  <th className="p-4 text-left text-sm font-semibold text-muted-foreground">Action</th>
+                  <th className="p-4 text-left text-sm font-semibold text-muted-foreground">Entity</th>
+                  <th className="p-4 text-left text-sm font-semibold text-muted-foreground">User</th>
+                  <th className="p-4 text-left text-sm font-semibold text-muted-foreground">Date</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border">
                 {auditLogs.map((log) => (
-                  <li key={log.id} className="p-4">
-                    <div className="flex justify-between">
-                      <div>
-                        <p className="font-medium text-foreground">{log.action} on {log.entity_type} {log.entity_id}</p>
-                        <p className="text-sm text-muted-foreground">{new Date(log.created_at).toLocaleString()}</p>
-                      </div>
-                      <p className="text-sm text-muted-foreground">User: {log.user_id}</p>
-                    </div>
-                  </li>
+                  <tr key={log.id} className="hover:bg-muted/50">
+                    <td className="p-4 font-medium text-foreground">{log.action}</td>
+                    <td className="p-4 text-muted-foreground">{log.entity_type} #{log.entity_id}</td>
+                    <td className="p-4 text-muted-foreground">{log.user_id}</td>
+                    <td className="p-4 text-muted-foreground">{new Date(log.created_at).toLocaleString()}</td>
+                  </tr>
                 ))}
-              </ul>
-            </div>
-          )}
+              </tbody>
+            </table>
+          </div>
         </div>
-      </main>
+      )}
     </div>
   );
 };

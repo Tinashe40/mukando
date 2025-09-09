@@ -1,6 +1,6 @@
 CREATE TABLE public.invitations (
     id BIGSERIAL PRIMARY KEY,
-    group_id BIGINT NOT NULL REFERENCES public.groups(id) ON DELETE CASCADE,
+    group_id UUID NOT NULL REFERENCES public.groups(id) ON DELETE CASCADE,
     email TEXT,
     phone TEXT,
     role TEXT NOT NULL DEFAULT 'member',

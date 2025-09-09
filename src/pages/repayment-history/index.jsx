@@ -1,9 +1,7 @@
-import React, { useState, useEffect } from 'react';
-import Header from '../../components/ui/Header';
-import Sidebar from '../../components/ui/Sidebar';
-import Icon from '../../components/AppIcon';
-import { getAllRepayments } from '../../lib/supabase';
+import React, { useEffect, useState } from 'react';
+import AppIcon from '../../components/AppIcon';
 import LoadingSpinner from '../../components/ui/LoadingSpinner';
+import { getAllRepayments } from '../../lib/supabase';
 
 const RepaymentHistory = () => {
   const [repayments, setRepayments] = useState([]);
@@ -20,36 +18,40 @@ const RepaymentHistory = () => {
   }, []);
 
   return (
-    <div className="min-h-screen bg-background">
-      <Header />
-      <Sidebar />
-      <main className="lg:ml-60 pt-16">
-        <div className="p-6 max-w-4xl mx-auto">
-          <div className="flex items-center gap-3 mb-6">
-            <Icon name="History" size={24} className="text-primary" />
-            <h1 className="text-2xl font-semibold text-foreground">Loan Repayment History</h1>
-          </div>
-          {isLoading ? (
-            <LoadingSpinner />
-          ) : (
-            <div className="bg-card rounded-lg border border-border shadow-warm">
-              <ul className="divide-y divide-border">
+    <div className="space-y-8">
+      <header>
+        <h1 className="text-3xl font-bold text-foreground">Repayment History</h1>
+        <p className="text-muted-foreground mt-1">A complete record of all loan repayments.</p>
+      </header>
+
+      {isLoading ? (
+        <div className="flex items-center justify-center h-64"><LoadingSpinner /></div>
+      ) : (
+        <div className="bg-card rounded-xl border border-border">
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-border">
+              <thead className="bg-muted/50">
+                <tr>
+                  <th className="p-4 text-left text-sm font-semibold text-muted-foreground">Loan Purpose</th>
+                  <th className="p-4 text-left text-sm font-semibold text-muted-foreground">Member</th>
+                  <th className="p-4 text-left text-sm font-semibold text-muted-foreground">Date</th>
+                  <th className="p-4 text-right text-sm font-semibold text-muted-foreground">Amount</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border">
                 {repayments.map((repayment) => (
-                  <li key={repayment.id} className="p-4">
-                    <div className="flex justify-between">
-                      <div>
-                        <p className="font-medium text-foreground">{repayment.loans.purpose} - {repayment.users.full_name}</p>
-                        <p className="text-sm text-muted-foreground">{new Date(repayment.repayment_date).toLocaleDateString()}</p>
-                      </div>
-                      <p className="font-medium text-foreground">{`$${repayment.amount}`}</p>
-                    </div>
-                  </li>
+                  <tr key={repayment.id} className="hover:bg-muted/50">
+                    <td className="p-4 font-medium text-foreground">{repayment.loans.purpose}</td>
+                    <td className="p-4 text-muted-foreground">{repayment.users.full_name}</td>
+                    <td className="p-4 text-muted-foreground">{new Date(repayment.repayment_date).toLocaleDateString()}</td>
+                    <td className="p-4 text-right font-semibold text-primary">{`$${repayment.amount}`}</td>
+                  </tr>
                 ))}
-              </ul>
-            </div>
-          )}
+              </tbody>
+            </table>
+          </div>
         </div>
-      </main>
+      )}
     </div>
   );
 };
