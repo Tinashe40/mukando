@@ -155,9 +155,10 @@ const Select = React.forwardRef(({
 
                 {/* Hidden native select for form submission */}
                 <select
+                    ref={ref}
                     name={name}
                     value={value || ''}
-                    onChange={() => { }} // Controlled by our custom logic
+                    onChange={onChange} // Use the onChange prop directly
                     className="sr-only"
                     tabIndex={-1}
                     multiple={multiple}

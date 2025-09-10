@@ -1,4 +1,3 @@
-import React from 'react';
 import { Link } from 'react-router-dom';
 import RegistrationForm from './components/RegistrationForm';
 
@@ -19,6 +18,14 @@ const UserRegistration = () => {
             Sign In
           </Link>
         </p>
+          <div className="mt-4 flex justify-center space-x-4">
+            <Link to="/terms" className="text-slate-500 hover:text-blue-600 hover:underline">
+              Terms of Service
+            </Link>
+            <Link to="/privacy" className="text-slate-500 hover:text-blue-600 hover:underline">
+              Privacy Policy
+            </Link>
+          </div>
       </div>
     </>
   );

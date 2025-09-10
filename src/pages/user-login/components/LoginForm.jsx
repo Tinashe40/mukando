@@ -38,28 +38,7 @@ const LoginForm = () => {
     }
   };
 
-  const handleForgotPassword = async () => {
-    const email = getValues('email');
-    if (!email) {
-      setError('email', { type: 'manual', message: 'Please enter your email to reset your password.' });
-      return;
-    }
-
-    setIsLoading(true);
-    setApiError(null);
-    try {
-      const { success, message, error } = await resetPassword(email);
-      if (success) {
-        setSuccessMessage(message);
-      } else {
-        setApiError(error);
-      }
-    } catch (error) {
-      setApiError(error.message || 'Failed to send reset instructions.');
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
@@ -78,9 +57,9 @@ const LoginForm = () => {
 
       <div className="space-y-2">
         <Input
-          label="Email Address"
+          label="Email"
           type="email"
-          placeholder="you@example.com"
+          placeholder="example@email.com"
           {...register('email', { required: 'Email is required' })}
           error={errors.email?.message}
         />
@@ -110,14 +89,6 @@ const LoginForm = () => {
           label="Remember me"
           {...register('rememberMe')}
         />
-        <button
-          type="button"
-          onClick={handleForgotPassword}
-          disabled={isLoading}
-          className="text-sm font-semibold text-primary hover:underline disabled:opacity-50"
-        >
-          Forgot password?
-        </button>
       </div>
 
       <Button

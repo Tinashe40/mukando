@@ -231,30 +231,21 @@ export const getFinancialOverview = async (userId) => {
 };
 
 export const getRecentActivity = async (userId) => {
-    const { data: contributions, error: contributionsError } = await supabase
-        .from('contributions')
-        .select('id, amount, created_at, \'\' as type, \'Contribution\' as title, \'Money added to your savings\' as description')
-        .eq('user_id', userId);
-
-    const { data: loanRepayments, error: loanRepaymentsError } = await supabase
-        .from('loan_repayments')
-        .select('id, amount, repayment_date as created_at, \'\' as type, \'Loan Repayment\' as title, \'Payment made towards your loan\' as description')
-        .eq('user_id', userId);
-
-    if (contributionsError) {
-        console.error('Error fetching contributions:', contributionsError);
+    const { data, error } = await supabase.rpc('get_recent_activity', { p_user_id: userId });
+    if (error) {
+        console.error('Error fetching recent activity:', error);
         return [];
     }
-    if (loanRepaymentsError) {
-        console.error('Error fetching loan repayments:', loanRepaymentsError);
+    return data;
+};
+
+export const getPaymentReminders = async (userId) => {
+    const { data, error } = await supabase.rpc('get_payment_reminders', { p_user_id: userId });
+    if (error) {
+        console.error('Error fetching payment reminders:', error);
         return [];
     }
-
-    const combinedActivity = [...contributions, ...loanRepayments];
-
-    combinedActivity.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-
-    return combinedActivity.slice(0, 5);
+    return data;
 };
 
 // Notifications center

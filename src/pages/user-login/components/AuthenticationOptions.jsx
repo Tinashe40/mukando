@@ -28,7 +28,7 @@ const AuthenticationOptions = () => {
       name: 'WhatsApp',
       icon: 'MessageCircle',
       provider: 'whatsapp',
-      available: false, // WhatsApp login is not directly supported
+      available: false, 
     },
   ];
 

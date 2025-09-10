@@ -4,7 +4,7 @@ import AppIcon from '../../components/AppIcon';
 import Button from '../../components/ui/Button';
 import LoadingSpinner from '../../components/ui/LoadingSpinner';
 import { useAuth } from '../../contexts/AuthContext';
-import { getFinancialOverview, getRecentActivity, getUserGroups } from '../../lib/supabase';
+import { getFinancialOverview, getRecentActivity, getUserGroups, getPaymentReminders } from '../../lib/supabase';
 import ActivityTimelineItem from './components/ActivityTimelineItem';
 import FinancialOverviewCard from './components/FinancialOverviewCard';
 import GroupMembershipTabs from './components/GroupMembershipTabs';
@@ -21,20 +21,23 @@ const MemberDashboard = () => {
   const [userGroups, setUserGroups] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [paymentReminders, setPaymentReminders] = useState([]);
 
   useEffect(() => {
     const fetchData = async () => {
       if (!user) return;
       setIsLoading(true);
       try {
-        const [overview, activity, groups] = await Promise.all([
+        const [overview, activity, groups, reminders] = await Promise.all([
           getFinancialOverview(user.id),
           getRecentActivity(user.id),
           getUserGroups(user.id),
+          getPaymentReminders(user.id),
         ]);
         setFinancialData(overview);
         setRecentActivity(activity || []);
         setUserGroups(groups || []);
+        setPaymentReminders(reminders || []);
       } catch (err) {
         setError('Failed to load dashboard data.');
         console.error(err);
@@ -110,7 +113,7 @@ const MemberDashboard = () => {
 
         <aside className="space-y-6">
           <QuickActionCard />
-          <PaymentReminderCard reminders={[]} />
+          <PaymentReminderCard reminders={paymentReminders} />
           <GroupMembershipTabs groups={userGroups} />
         </aside>
       </div>

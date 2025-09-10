@@ -32,7 +32,7 @@ const Checkbox = React.forwardRef(({
                     type="checkbox"
                     ref={ref}
                     id={checkboxId}
-                    checked={checked}
+                    checked={props.value}
                     disabled={disabled}
                     required={required}
                     className="sr-only"
@@ -44,13 +44,13 @@ const Checkbox = React.forwardRef(({
                     className={cn(
                         "peer shrink-0 rounded-sm border border-primary ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground cursor-pointer transition-colors",
                         sizeClasses?.[size],
-                        checked && "bg-primary text-primary-foreground border-primary",
+                        props.value && "bg-primary text-primary-foreground border-primary",
                         indeterminate && "bg-primary text-primary-foreground border-primary",
                         error && "border-destructive",
                         disabled && "cursor-not-allowed opacity-50"
                     )}
                 >
-                    {checked && !indeterminate && (
+                    {props.value && !indeterminate && (
                         <Check className="h-3 w-3 text-current flex items-center justify-center" />
                     )}
                     {indeterminate && (

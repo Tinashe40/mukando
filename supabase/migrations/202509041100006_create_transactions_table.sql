@@ -1,7 +1,7 @@
 CREATE TABLE public.transactions (
     id BIGSERIAL PRIMARY KEY,
     user_id UUID NOT NULL REFERENCES public.user_profiles(id) ON DELETE CASCADE,
-    group_id UUID REFERENCES public.groups(id) ON DELETE SET NULL,
+    -- group_id UUID REFERENCES public.groups(id) ON DELETE SET NULL, -- Temporarily commented out
     amount NUMERIC NOT NULL,
     type TEXT NOT NULL, -- e.g., 'contribution', 'withdrawal', 'loan_disbursement', 'loan_repayment'
     purpose TEXT,

@@ -61,7 +61,7 @@ BEGIN
     COALESCE(NEW.raw_user_meta_data->>'full_name', split_part(NEW.email, '@', 1)),
     NEW.raw_user_meta_data->>'phone_number',
     COALESCE((NEW.raw_user_meta_data->>'country')::public.country_code, 'ZW'::public.country_code),
-    (NEW.raw_user_meta_data->>'mobile_money_provider')::public.mobile_money_provider,
+    COALESCE((NEW.raw_user_meta_data->>'mobile_money_provider')::public.mobile_money_provider, NULL),
     role_id
   );
   RETURN NEW;

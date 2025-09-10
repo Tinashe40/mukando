@@ -2,6 +2,7 @@ import { lazy, Suspense } from 'react';
 import { BrowserRouter, Navigate, Route, Routes as RouterRoutes } from 'react-router-dom';
 import AppLayout from './components/AppLayout';
 import AuthLayout from './components/AuthLayout';
+import AuthNavigator from './components/AuthNavigator';
 import ErrorBoundary from './components/ErrorBoundary';
 import ScrollToTop from './components/ScrollToTop';
 import LoadingSpinner from './components/ui/LoadingSpinner';
@@ -58,6 +59,7 @@ function AppRoutes() {
     <BrowserRouter>
       <ErrorBoundary>
         <ScrollToTop />
+        <AuthNavigator />
         <Suspense fallback={
           <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-blue-50">
             <div className="text-center">

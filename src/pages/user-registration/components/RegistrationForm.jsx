@@ -22,7 +22,11 @@ const RegistrationForm = () => {
     setApiError(null);
     try {
       await signup(data);
-      navigate('/auth/login', { state: { message: 'Registration successful! Please check your email to verify your account.' } });
+      navigate('/auth/login', { 
+        state: { 
+          message: 'Registration successful! Please check your email to verify your account before logging in.' 
+        } 
+      });
     } catch (error) {
       setApiError(error.message || 'Registration failed. Please try again.');
     } finally {
@@ -53,14 +57,14 @@ const RegistrationForm = () => {
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <Input
           label="Full Name"
-          placeholder="e.g. John Doe"
+          placeholder="e.g. Anesu Tawanda"
           {...register('fullName', { required: 'Full name is required' })}
           error={errors.fullName?.message}
         />
         <Input
           label="Email Address"
           type="email"
-          placeholder="you@example.com"
+          placeholder="anesu@mukando.com"
           {...register('email', { required: 'Email is required' })}
           error={errors.email?.message}
         />
@@ -105,6 +109,7 @@ const RegistrationForm = () => {
       <Select
         label="Country"
         options={countryOptions}
+        value={watch('country')} // Explicitly pass the value
         {...register('country', { required: 'Country is required' })}
         error={errors.country?.message}
       />
